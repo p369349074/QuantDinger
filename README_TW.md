@@ -15,14 +15,14 @@
   <h1 align="center">QuantDinger</h1>
 
   <h3 align="center">
-    本地優先的量化交易基礎設施
+    下一代 AI 量化交易平台
   </h3>
 
   <p align="center">
-    <strong>🔒 隱私優先 · 🛠️ 自託管 · 📊 多市場</strong>
+    <strong>🤖 AI 原生 · 🐍 可視化 Python · 🌍 全球多市場 · 🔒 隱私優先</strong>
   </p>
   <p align="center">
-    <i>運行你自己的交易基礎設施：數據、分析、回測和執行。</i>
+    <i>擁有 AI 副駕駛的構建、回測與交易平台。比 PineScript 更強，比 SaaS 更智能。</i>
   </p>
 
   <p align="center">
@@ -73,10 +73,11 @@ QuantDinger 包含一個內置的**基於 LLM 的多智能體研究系統**，�
 
 ### 核心價值
 
-- **隱私優先**：所有策略、交易日誌和 API 密鑰都存儲在本地 SQLite 數據庫中
-- **AI 驅動的分析**：基於 LLM 的研究智能體（OpenRouter/LLM）進行市場分析
-- **多市場支持**：加密貨幣、美股、A股/港股、外匯和期貨
-- **Docker 部署**：使用 Docker Compose 一鍵部署
+- **🔓 Apache 2.0 開源**：完全寬鬆且商業友好。不像病毒式的 GPL/AGPL 協議，你真正擁有你的代碼和修改權。
+- **🐍 Python 原生 & 可視化**：使用標準 Python 編寫指標（比 PineScript 更簡單），並由 AI 輔助。直接在圖表上可視化信號——打造「本地版 TradingView」體驗。
+- **🤖 AI 閉環優化**：不僅運行策略，AI 還會分析回測結果並建議參數調整（止損/止盈/MACD 設置），形成閉環優化。
+- **🌍 全球市場接入**：統一系統支持加密貨幣（實盤）、美股/A股、外匯和期貨（數據/通知）。
+- **⚡ Docker & 清晰架構**：4 行命令極速部署。現代技術棧（Vue + Python），架構清晰，關注點分離。
 
 ---
 
@@ -135,21 +136,42 @@ QuantDinger 包含一個內置的**基於 LLM 的多智能體研究系統**，�
 
 ## ✨ 關鍵特性
 
-### 1. 通用數據引擎
-無需再為數據 API 發愁。QuantDinger 採用了強大的數據源工廠模式：
-- **加密貨幣**：**直連交易所 API** 進行交易（支持 10+ 交易所），結合 **CCXT** 獲取行情數據（支持 100+ 來源）。
-- **股票**：集成 Yahoo Finance、Finnhub、Tiingo (美股) 和 AkShare (A股/港股)。
-- **期貨/外匯**：支持 OANDA 及主要期貨數據源。
-- **代理支持**：內置代理配置，適應受限網絡環境。
+### 1. 可視化 Python 策略工作台
+*比 PineScript 更強，比 SaaS 更智能。*
 
-### 2. AI 多智能體投研
-你不知疲倦的分析師團隊：
-- **協調智能體**：拆解任務並管理工作流。
-- **搜索智能體**：進行全網搜索（Google/Bing）獲取宏觀新聞。
-- **加密/股票智能體**：專注於特定市場的技術和資金流向分析。
-- **報告生成**：自動產出結構化的日報/週報。
+- **Python 原生**：用 Python 編寫指標和策略。利用完整的 Python 生態（Pandas, Numpy, TA-Lib），而不是 PineScript 這種專用語言。
+- **"Mini-TradingView" 體驗**：直接在內置的 K 線圖上運行你的 Python 指標。在歷史數據上可視化調試買賣信號。
+- **AI 輔助編程**：讓內置 AI 為你編寫複雜的邏輯。從創意到代碼只需幾秒鐘。
 
-### 2.1 🧠 AI 記憶增強系統（Memory-Augmented Agents）
+### 2. 完整的交易生命週期
+*從指標到執行，無縫銜接。*
+
+1.  **指標**：定義你的市場入場/出場信號。
+2.  **策略配置**：附加風險管理規則（倉位管理、止損、止盈）。
+3.  **回測 & AI 優化**：運行回測，查看豐富的性能指標，並**讓 AI 分析結果以建議改進**（例如：「調整 MACD 閾值為 X」）。
+4.  **執行模式**：
+    - **實盤交易**：直接 API 執行，支持 10+ 加密貨幣交易所（Binance, OKX 等）。
+    - **信號通知**：針對非實盤執行的市場（股票/外匯/期貨），通過 Telegram, Discord, Email, SMS 或 Webhook 發送信號。
+
+### 3. AI 多智能體投研
+*你的 7x24 小時 AI 投委會。*
+
+系統僱用了一個多智能體團隊作為你策略的二次過濾器：
+
+- **研究智能體**：抓取網絡新聞和宏觀事件（Google/Bing）。
+- **分析智能體**：分析技術指標和資金流向。
+- **策略集成**：AI 的判斷可以作為「市場過濾器」——僅當 AI 情緒一致時才允許策略交易（例如：「如果 AI 風險分析師標記宏觀風險極高，則不要買入」）。
+
+### 4. 通用數據引擎
+
+QuantDinger 提供跨多個市場的統一數據接口：
+
+- **加密貨幣**：直接 API 連接進行交易（10+ 交易所）和 CCXT 集成獲取行情數據（100+ 數據源）
+- **股票**：Yahoo Finance、Finnhub、Tiingo（美股）和 AkShare（A股/港股）
+- **期貨/外匯**：OANDA 和主要期貨數據源
+- **代理支持**：內置代理配置，適應受限網絡環境
+
+### 5. 🧠 AI 記憶增強系統（Memory-Augmented Agents）
 QuantDinger 的多智能體不是「每次從零開始」。後端內建**本地記憶庫 + 反思閉環**：在生成提示詞（prompt）時檢索過往經驗並注入到 system prompt，並可在事後驗證/復盤後把結果寫回記憶庫。
 
 - **本質**：RAG 風格「經驗檢索增強」，**不是**訓練/微調模型權重（零外部向量庫依賴）。
@@ -249,13 +271,13 @@ score = w_{sim}\cdot sim + w_{recency}\cdot recency + w_{returns}\cdot returns\_
 - `AGENT_MEMORY_HALF_LIFE_DAYS`, `AGENT_MEMORY_W_SIM`, `AGENT_MEMORY_W_RECENCY`, `AGENT_MEMORY_W_RETURNS`
 - `ENABLE_REFLECTION_WORKER`, `REFLECTION_WORKER_INTERVAL_SEC`
 
-### 3. 策略運行時
+### 6. 策略運行時
 
 - **基於線程的執行器**：獨立的線程池用於策略執行
 - **自動恢復**：系統重啟後恢復運行中的策略
 - **訂單隊列**：後台工作線程用於訂單執行
 
-### 4. 技術棧
+### 7. 技術棧
 
 - **後端**：Python (Flask) + SQLite + Redis（可選）
 - **前端**：Vue 2 + Ant Design Vue + KlineCharts/ECharts

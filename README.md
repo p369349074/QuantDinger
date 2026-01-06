@@ -15,14 +15,14 @@
   <br/>
 
   <h3 align="center">
-    Local-first quantitative trading infrastructure
+    Next-Gen AI Quantitative Trading Platform
   </h3>
 
   <p align="center">
-    <strong>🔒 Privacy-First · 🛠️ Self-Hosted · 📊 Multi-Market</strong>
+    <strong>🤖 AI-Native · 🐍 Visual Python · 🌍 Multi-Market · 🔒 Privacy-First</strong>
   </p>
   <p align="center">
-    <i>Run your own trading infrastructure: data, analysis, backtesting, and execution.</i>
+    <i>Build, Backtest, and Trade with an AI Co-Pilot. Better than PineScript, Smarter than SaaS.</i>
   </p>
 
   <p align="center">
@@ -73,10 +73,11 @@ QuantDinger includes a built-in **LLM-based multi-agent research system** that g
 
 ### Core Value
 
-- **Privacy First**: All strategies, trading logs, and API keys are stored locally in SQLite
-- **AI-Powered Analysis**: LLM-based research agents (OpenRouter/LLM) for market analysis
-- **Multi-Market Support**: Cryptocurrency, US stocks, CN/HK stocks, forex, and futures
-- **Docker Deployment**: One-command setup with Docker Compose
+- **🔓 Apache 2.0 Open Source**: Fully permissive and commercial-friendly. Unlike viral licenses (GPL/AGPL), you truly own your code and modifications.
+- **🐍 Python-Native & Visual**: Write indicators in standard Python (easier than PineScript) with AI assistance. Visualize signals directly on charts—a "Local TradingView" experience.
+- **🤖 AI-Loop Optimization**: It doesn't just run strategies; AI analyzes backtest results to suggest parameter tuning (Stop-Loss/TP/MACD settings), forming a closed optimization loop.
+- **🌍 Universal Market Access**: One unified system for Crypto (Live), US/CN Stocks, Forex, and Futures (Data/Notify).
+- **⚡ Docker & Clean Arch**: 4-line command deployment. Modern Tech Stack (Vue + Python) with a clean, separation-of-concerns architecture.
 
 ---
 
@@ -135,7 +136,33 @@ QuantDinger includes a built-in **LLM-based multi-agent research system** that g
 
 ## ✨ Key Features
 
-### 1. Universal Data Engine
+### 1. Visual Python Strategy Workbench
+*Better than PineScript, Smarter than SaaS.*
+
+- **Python Native**: Write indicators and strategies in Python. Leverage the entire Python ecosystem (Pandas, Numpy, TA-Lib) instead of proprietary languages like PineScript.
+- **"Mini-TradingView" Experience**: Run your Python indicators directly on the built-in K-line charts. Visually debug buy/sell signals on historical data.
+- **AI-Assisted Coding**: Let the built-in AI write the complex logic for you. From idea to code in seconds.
+
+### 2. Complete Trading Lifecycle
+*From Indicator to Execution, Seamlessly.*
+
+1.  **Indicator**: Define your market entry/exit signals.
+2.  **Strategy Config**: Attach risk management rules (Position sizing, Stop-Loss, Take-Profit).
+3.  **Backtest & AI Optimization**: Run backtests, view rich performance metrics, and **let AI analyze the result to suggest improvements** (e.g., "Adjust MACD threshold to X").
+4.  **Execution Mode**:
+    - **Live Trading**: Direct API execution for 10+ Crypto Exchanges (Binance, OKX, etc.).
+    - **Signal Notification**: For non-executable markets (Stocks/Forex/Futures), send signals via Telegram, Discord, Email, SMS, or Webhook.
+
+### 3. AI Multi-Agent Research
+*Your 24/7 AI Investment Committee.*
+
+The system employs a multi-agent team to act as a secondary filter for your strategies:
+
+- **Research Agents**: Scrape web news and macro events (Google/Bing).
+- **Analysis Agents**: Analyze technical indicators and capital flows.
+- **Strategic Integration**: The AI judgment can serve as a "Market Filter"—only allowing your strategy to trade when the AI sentiment aligns (e.g., "Don't buy if AI Risk Analyst flags high macro danger").
+
+### 4. Universal Data Engine
 
 QuantDinger provides a unified data interface across multiple markets:
 
@@ -144,16 +171,8 @@ QuantDinger provides a unified data interface across multiple markets:
 - **Futures/Forex**: OANDA and major futures data sources
 - **Proxy Support**: Built-in proxy configuration for restricted network environments
 
-### 2. AI Multi-Agent Research
+### 5. Memory-Augmented Agents (Local RAG + Reflection Loop)
 
-The system includes a multi-agent workflow for market analysis:
-
-- **Coordinator Agent**: Task decomposition and workflow management
-- **Research Agent**: Web search (Google/Bing) for macro news and events
-- **Market-Specific Agents**: Technical and capital flow analysis for crypto and stocks
-- **Report Generation**: Structured daily/weekly research reports
-
-### 2.1 🧠 Memory-Augmented Agents (Local RAG + Reflection Loop)
 QuantDinger’s agents don’t start from scratch every time. The backend includes a **local memory store** and an optional **reflection/verification loop**:
 
 - **What it is**: RAG-style experience retrieval injected into agent prompts (NOT model fine-tuning).
@@ -244,13 +263,13 @@ score = w_{sim}\cdot sim + w_{recency}\cdot recency + w_{returns}\cdot returns\_
 
 Config lives in `.env` (see `backend_api_python/env.example`): `ENABLE_AGENT_MEMORY`, `AGENT_MEMORY_TOP_K`, `AGENT_MEMORY_ENABLE_VECTOR`, `AGENT_MEMORY_HALF_LIFE_DAYS`, and `ENABLE_REFLECTION_WORKER`.
 
-### 3. Strategy Runtime
+### 6. Strategy Runtime
 
 - **Thread-Based Executor**: Independent thread pool for strategy execution
 - **Auto-Restore**: Resumes running strategies after system restarts
 - **Order Queue**: Background worker for order execution
 
-### 4. Tech Stack
+### 7. Tech Stack
 
 - **Backend**: Python (Flask) + SQLite + Redis (optional)
 - **Frontend**: Vue 2 + Ant Design Vue + KlineCharts/ECharts
