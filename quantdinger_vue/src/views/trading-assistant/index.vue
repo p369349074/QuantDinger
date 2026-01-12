@@ -1039,6 +1039,85 @@
                   <!-- <template v-else-if="currentBrokerId === 'futu'">...</template> -->
                 </template>
 
+                <!-- ========== MT5/Forex Broker Configuration ========== -->
+                <template v-else-if="isMT5Market">
+                  <a-form-item :label="$t('trading-assistant.form.forexBroker')">
+                    <a-select
+                      v-decorator="['forex_broker_id', {
+                        initialValue: 'mt5',
+                        rules: [{ required: true, message: $t('trading-assistant.validation.brokerRequired') }]
+                      }]"
+                      :placeholder="$t('trading-assistant.placeholders.selectBroker')"
+                      :getPopupContainer="getModalPopupContainer"
+                      @change="handleForexBrokerSelectChange"
+                    >
+                      <a-select-option
+                        v-for="broker in forexBrokerOptions"
+                        :key="broker.value"
+                        :value="broker.value"
+                      >
+                        {{ broker.displayName }}
+                      </a-select-option>
+                    </a-select>
+                  </a-form-item>
+
+                  <!-- MT5 specific configuration -->
+                  <template v-if="currentBrokerId === 'mt5'">
+                    <a-alert
+                      type="info"
+                      show-icon
+                      style="margin-bottom: 16px;"
+                      :message="$t('trading-assistant.form.mt5ConnectionTitle')"
+                      :description="$t('trading-assistant.form.mt5ConnectionHint')"
+                    />
+
+                    <a-form-item :label="$t('trading-assistant.form.mt5Server')">
+                      <a-input
+                        v-decorator="['mt5_server', {
+                          rules: [{ required: true, message: $t('trading-assistant.validation.mt5ServerRequired') }]
+                        }]"
+                        :placeholder="$t('trading-assistant.placeholders.mt5Server')"
+                        @change="handleApiConfigChange"
+                      />
+                      <div class="form-item-hint">{{ $t('trading-assistant.form.mt5ServerHint') }}</div>
+                    </a-form-item>
+
+                    <a-form-item :label="$t('trading-assistant.form.mt5Login')">
+                      <a-input-number
+                        v-decorator="['mt5_login', {
+                          rules: [{ required: true, message: $t('trading-assistant.validation.mt5LoginRequired') }]
+                        }]"
+                        :placeholder="$t('trading-assistant.placeholders.mt5Login')"
+                        :min="1"
+                        style="width: 100%"
+                        @change="handleApiConfigChange"
+                      />
+                    </a-form-item>
+
+                    <a-form-item :label="$t('trading-assistant.form.mt5Password')">
+                      <a-input-password
+                        v-decorator="['mt5_password', {
+                          rules: [{ required: true, message: $t('trading-assistant.validation.mt5PasswordRequired') }]
+                        }]"
+                        :placeholder="$t('trading-assistant.placeholders.mt5Password')"
+                        @change="handleApiConfigChange"
+                      />
+                    </a-form-item>
+
+                    <a-form-item :label="$t('trading-assistant.form.mt5TerminalPath')">
+                      <a-input
+                        v-decorator="['mt5_terminal_path']"
+                        :placeholder="$t('trading-assistant.placeholders.mt5TerminalPath')"
+                        @change="handleApiConfigChange"
+                      />
+                      <div class="form-item-hint">{{ $t('trading-assistant.form.mt5TerminalPathHint') }}</div>
+                    </a-form-item>
+                  </template>
+
+                  <!-- Future forex broker configurations can be added here -->
+                  <!-- <template v-else-if="currentBrokerId === 'mt4'">...</template> -->
+                </template>
+
                 <!-- ========== Crypto Exchange Configuration ========== -->
                 <template v-else>
                   <a-form-item :label="$t('trading-assistant.form.savedCredential')">
@@ -1223,6 +1302,14 @@ const BROKER_OPTIONS = [
   // { value: 'tiger', labelKey: 'tiger', name: 'Tiger Brokers (老虎证券)' },
 ]
 
+// Forex broker options
+const FOREX_BROKER_OPTIONS = [
+  { value: 'mt5', labelKey: 'mt5', name: 'MetaTrader 5' }
+  // Future forex brokers can be added here:
+  // { value: 'mt4', labelKey: 'mt4', name: 'MetaTrader 4' },
+  // { value: 'ctrader', labelKey: 'ctrader', name: 'cTrader' },
+]
+
 export default {
   name: 'TradingAssistant',
   mixins: [baseMixin],
@@ -1241,6 +1328,14 @@ export default {
     // Check if current market uses IBKR (US Stock / HK Stock)
     isIBKRMarket () {
       return ['USStock', 'HShare'].includes(this.selectedMarketCategory)
+    },
+    // Check if current market uses MT5 (Forex)
+    isMT5Market () {
+      return this.selectedMarketCategory === 'Forex'
+    },
+    // Check if current market uses any broker (not crypto exchange)
+    isBrokerMarket () {
+      return this.isIBKRMarket || this.isMT5Market
     },
     // 预处理交易所列表，包含显示名称，提升性能
     formattedExchangeOptions () {
@@ -1294,7 +1389,7 @@ export default {
       const cat = this.selectedMarketCategory || 'Crypto'
       return String(cat).toLowerCase() === 'crypto'
     },
-    // Check if selected market supports live trading (Crypto or USStock/HShare with IBKR)
+    // Check if selected market supports live trading (Crypto, USStock/HShare with IBKR, or Forex with MT5)
     canUseLiveTrading () {
       const cat = this.selectedMarketCategory || 'Crypto'
       // Crypto always supports live trading via crypto exchanges
@@ -1303,6 +1398,10 @@ export default {
       }
       // USStock/HShare can use IBKR for live trading
       if (['USStock', 'HShare'].includes(cat)) {
+        return true
+      }
+      // Forex can use MT5 for live trading
+      if (cat === 'Forex') {
         return true
       }
       return false
@@ -1317,13 +1416,37 @@ export default {
       }
       // USStock/HShare use IBKR
       if (['USStock', 'HShare'].includes(cat)) {
-        return exchangeId === 'ibkr'
+        return this.currentBrokerId === 'ibkr'
+      }
+      // Forex uses MT5
+      if (cat === 'Forex') {
+        return this.currentBrokerId === 'mt5'
       }
       return false
     },
     // Broker options for US/HK stocks (with i18n support)
     brokerOptions () {
       return BROKER_OPTIONS.map(broker => {
+        let label = ''
+        try {
+          const translationKey = `trading-assistant.brokerNames.${broker.labelKey}`
+          const translated = this.$t(translationKey)
+          if (translated !== translationKey) {
+            label = translated
+          }
+        } catch (e) {}
+        if (!label) {
+          label = broker.name || broker.value.toUpperCase()
+        }
+        return {
+          ...broker,
+          displayName: label
+        }
+      })
+    },
+    // Forex broker options (with i18n support)
+    forexBrokerOptions () {
+      return FOREX_BROKER_OPTIONS.map(broker => {
         let label = ''
         try {
           const translationKey = `trading-assistant.brokerNames.${broker.labelKey}`
@@ -1502,9 +1625,22 @@ export default {
       // Keep selection reactive for Step 3 execution gating
       this.selectedMarketCategory = market || 'Crypto'
 
+      // Auto-set broker ID based on market category
+      if (this.selectedMarketCategory === 'Forex') {
+        this.currentBrokerId = 'mt5'
+        try {
+          this.form && this.form.setFieldsValue && this.form.setFieldsValue({ forex_broker_id: 'mt5' })
+        } catch (e) {}
+      } else if (['USStock', 'HShare'].includes(this.selectedMarketCategory)) {
+        this.currentBrokerId = 'ibkr'
+        try {
+          this.form && this.form.setFieldsValue && this.form.setFieldsValue({ broker_id: 'ibkr' })
+        } catch (e) {}
+      }
+
       // Markets without live trading support: force back to signal mode
-      // Crypto, USStock, HShare support live trading; others do not
-      const supportsLiveTrading = ['Crypto', 'USStock', 'HShare'].includes(this.selectedMarketCategory)
+      // Crypto, USStock, HShare, Forex support live trading; others do not
+      const supportsLiveTrading = ['Crypto', 'USStock', 'HShare', 'Forex'].includes(this.selectedMarketCategory)
       if (!supportsLiveTrading) {
         this.executionModeUi = 'signal'
         try {
@@ -1532,8 +1668,21 @@ export default {
         }
       }
 
+      // Auto-set broker ID based on market category
+      if (this.selectedMarketCategory === 'Forex') {
+        this.currentBrokerId = 'mt5'
+        try {
+          this.form && this.form.setFieldsValue && this.form.setFieldsValue({ forex_broker_id: 'mt5' })
+        } catch (e) {}
+      } else if (['USStock', 'HShare'].includes(this.selectedMarketCategory)) {
+        this.currentBrokerId = 'ibkr'
+        try {
+          this.form && this.form.setFieldsValue && this.form.setFieldsValue({ broker_id: 'ibkr' })
+        } catch (e) {}
+      }
+
       // Markets without live trading support: force back to signal mode
-      const supportsLiveTrading = ['Crypto', 'USStock', 'HShare'].includes(this.selectedMarketCategory)
+      const supportsLiveTrading = ['Crypto', 'USStock', 'HShare', 'Forex'].includes(this.selectedMarketCategory)
       if (!supportsLiveTrading) {
         this.executionModeUi = 'signal'
         try {
@@ -1868,8 +2017,9 @@ export default {
       if (strategy.exchange_config) {
         const exchangeId = strategy.exchange_config.exchange_id || ''
         const isLive = this.executionModeUi === 'live'
-        const supportsLiveTrading = ['Crypto', 'USStock', 'HShare'].includes(this.selectedMarketCategory)
+        const supportsLiveTrading = ['Crypto', 'USStock', 'HShare', 'Forex'].includes(this.selectedMarketCategory)
         const isBrokerMarket = ['USStock', 'HShare'].includes(this.selectedMarketCategory)
+        const isForexMarket = this.selectedMarketCategory === 'Forex'
 
         if (isLive && supportsLiveTrading) {
           if (isBrokerMarket) {
@@ -1881,6 +2031,16 @@ export default {
               ibkr_port: strategy.exchange_config.ibkr_port || 7497,
               ibkr_client_id: strategy.exchange_config.ibkr_client_id || 1,
               ibkr_account: strategy.exchange_config.ibkr_account || ''
+            })
+          } else if (isForexMarket) {
+            // MT5 configuration (Forex)
+            this.currentBrokerId = exchangeId || 'mt5'
+            this.form.setFieldsValue({
+              forex_broker_id: exchangeId || 'mt5',
+              mt5_server: strategy.exchange_config.mt5_server || '',
+              mt5_login: strategy.exchange_config.mt5_login || '',
+              mt5_password: strategy.exchange_config.mt5_password || '',
+              mt5_terminal_path: strategy.exchange_config.mt5_terminal_path || ''
             })
           } else {
             // Crypto exchange configuration
@@ -1903,8 +2063,8 @@ export default {
         }
 
         // Update UI state
-        if (isBrokerMarket) {
-          this.currentBrokerId = exchangeId || 'ibkr'
+        if (isBrokerMarket || isForexMarket) {
+          this.currentBrokerId = exchangeId || (isForexMarket ? 'mt5' : 'ibkr')
         } else {
           this.currentExchangeId = exchangeId
         }
@@ -2465,6 +2625,11 @@ export default {
       this.testResult = null
       this.connectionTestResult = null
     },
+    handleForexBrokerSelectChange (value) {
+      this.currentBrokerId = value || 'mt5'
+      this.testResult = null
+      this.connectionTestResult = null
+    },
     handleExchangeSelectChange (value) {
       this.currentExchangeId = value || ''
       this.testResult = null
@@ -2593,6 +2758,58 @@ export default {
             this.testResult = {
               success: false,
               message: error.response?.data?.error || error.message || this.$t('trading-assistant.exchange.ibkrConnectionFailed')
+            }
+            this.$message.error(this.testResult.message)
+          } finally {
+            this.testing = false
+          }
+          return
+        }
+
+        // MT5 uses different connection test (server/login/password)
+        if (this.isMT5Market) {
+          const values = this.form.getFieldsValue(['mt5_server', 'mt5_login', 'mt5_password', 'mt5_terminal_path'])
+          const server = values.mt5_server || ''
+          const login = values.mt5_login || ''
+          const password = values.mt5_password || ''
+          const terminal_path = values.mt5_terminal_path || ''
+
+          if (!server || !login || !password) {
+            this.testResult = {
+              success: false,
+              message: this.$t('trading-assistant.exchange.fillComplete')
+            }
+            this.$message.error(this.testResult.message)
+            this.testing = false
+            return
+          }
+
+          try {
+            // Call MT5 connect API
+            const res = await this.$http.post('/api/mt5/connect', {
+              server: server,
+              login: parseInt(login),
+              password: password,
+              terminal_path: terminal_path
+            })
+
+            if (res.data && res.data.success) {
+              this.testResult = {
+                success: true,
+                message: this.$t('trading-assistant.exchange.mt5ConnectionSuccess')
+              }
+              this.$message.success(this.$t('trading-assistant.exchange.mt5ConnectionSuccess'))
+            } else {
+              this.testResult = {
+                success: false,
+                message: res.data?.error || this.$t('trading-assistant.exchange.mt5ConnectionFailed')
+              }
+              this.$message.error(this.testResult.message)
+            }
+          } catch (error) {
+            this.testResult = {
+              success: false,
+              message: error.response?.data?.error || error.message || this.$t('trading-assistant.exchange.mt5ConnectionFailed')
             }
             this.$message.error(this.testResult.message)
           } finally {
@@ -2808,6 +3025,14 @@ export default {
                 ibkr_port: values.ibkr_port || 7497,
                 ibkr_client_id: values.ibkr_client_id || 1,
                 ibkr_account: values.ibkr_account || ''
+              } : this.isMT5Market ? {
+                // MT5/Forex broker configuration
+                exchange_id: values.forex_broker_id || this.currentBrokerId || 'mt5',
+                // MT5 specific fields
+                mt5_server: values.mt5_server || '',
+                mt5_login: values.mt5_login || '',
+                mt5_password: values.mt5_password || '',
+                mt5_terminal_path: values.mt5_terminal_path || ''
               } : {
                 // Crypto exchange configuration
                 exchange_id: values.exchange_id,
@@ -2882,8 +3107,8 @@ export default {
                 const totalCreated = res.data?.total_created || this.selectedSymbols.length
                 this.$message.success(this.$t('trading-assistant.messages.batchCreateSuccess', { count: totalCreated }))
               }
-              // Save credential to vault (crypto exchanges only, IBKR doesn't need this)
-              if (isLive && values.save_credential && !this.isIBKRMarket) {
+              // Save credential to vault (crypto exchanges only, IBKR/MT5 don't need this)
+              if (isLive && values.save_credential && !this.isIBKRMarket && !this.isMT5Market) {
                 try {
                   await createExchangeCredential({
                     user_id: 1,

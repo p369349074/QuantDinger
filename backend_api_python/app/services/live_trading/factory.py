@@ -4,6 +4,7 @@ Factory for direct exchange clients.
 Supports:
 - Crypto exchanges: Binance, OKX, Bitget, Bybit, Coinbase, Kraken, KuCoin, Gate, Bitfinex
 - Traditional brokers: Interactive Brokers (IBKR) for US/HK stocks
+- Forex brokers: MetaTrader 5 (MT5)
 """
 
 from __future__ import annotations
@@ -27,6 +28,10 @@ from app.services.live_trading.bitfinex import BitfinexClient, BitfinexDerivativ
 # Lazy import IBKR to avoid ImportError if ib_insync not installed
 IBKRClient = None
 IBKRConfig = None
+
+# Lazy import MT5 to avoid ImportError if MetaTrader5 not installed
+MT5Client = None
+MT5Config = None
 
 
 def _get(cfg: Dict[str, Any], *keys: str) -> str:
@@ -109,9 +114,17 @@ def create_client(exchange_config: Dict[str, Any], *, market_type: str = "swap")
             return BitfinexClient(api_key=api_key, secret_key=secret_key, base_url=base_url)
         return BitfinexDerivativesClient(api_key=api_key, secret_key=secret_key, base_url=base_url)
 
-    # Traditional brokers (IBKR for US/HK stocks)
+    # Traditional brokers (IBKR for US/HK stocks only)
     if exchange_id == "ibkr":
+        # Note: Market category validation should be done at the caller level
+        # This factory only creates clients based on exchange_id
         return create_ibkr_client(exchange_config)
+
+    # Forex brokers (MT5 for Forex only)
+    if exchange_id == "mt5":
+        # Note: Market category validation should be done at the caller level
+        # This factory only creates clients based on exchange_id
+        return create_mt5_client(exchange_config)
 
     raise LiveTradingError(f"Unsupported exchange_id: {exchange_id}")
 
@@ -155,6 +168,59 @@ def create_ibkr_client(exchange_config: Dict[str, Any]):
     # Connect immediately (IBKR requires active connection)
     if not client.connect():
         raise LiveTradingError("Failed to connect to IBKR TWS/Gateway. Please check if it's running.")
+
+    return client
+
+
+def create_mt5_client(exchange_config: Dict[str, Any]):
+    """
+    Create MT5 client for forex trading.
+
+    exchange_config should contain:
+    - mt5_login: MT5 account number
+    - mt5_password: MT5 password
+    - mt5_server: Broker server name (e.g., "ICMarkets-Demo")
+    - mt5_terminal_path: Optional path to terminal64.exe
+    """
+    global MT5Client, MT5Config
+
+    # Lazy import to avoid ImportError if MetaTrader5 not installed
+    if MT5Client is None or MT5Config is None:
+        try:
+            from app.services.mt5_trading import MT5Client as _MT5Client, MT5Config as _MT5Config
+            MT5Client = _MT5Client
+            MT5Config = _MT5Config
+        except ImportError:
+            raise LiveTradingError(
+                "MT5 trading requires MetaTrader5 library. Run: pip install MetaTrader5\n"
+                "Note: This library only works on Windows."
+            )
+
+    login = int(exchange_config.get("mt5_login") or 0)
+    password = str(exchange_config.get("mt5_password") or "").strip()
+    server = str(exchange_config.get("mt5_server") or "").strip()
+    terminal_path = str(exchange_config.get("mt5_terminal_path") or "").strip()
+
+    if not login or not password or not server:
+        raise LiveTradingError("MT5 requires login, password, and server")
+
+    config = MT5Config(
+        login=login,
+        password=password,
+        server=server,
+        terminal_path=terminal_path,
+    )
+
+    client = MT5Client(config)
+
+    # Connect immediately
+    if not client.connect():
+        raise LiveTradingError(
+            "Failed to connect to MT5 terminal. Please check:\n"
+            "1. MT5 terminal is running\n"
+            "2. Credentials are correct\n"
+            "3. You are on Windows"
+        )
 
     return client
 

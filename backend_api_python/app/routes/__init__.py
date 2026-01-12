@@ -1,11 +1,11 @@
 """
-API 路由模块
+API Routes Module
 """
 from flask import Flask
 
 
 def register_routes(app: Flask):
-    """注册所有 API 路由蓝图"""
+    """Register all API route blueprints"""
     from app.routes.kline import kline_bp
     from app.routes.analysis import analysis_bp
     from app.routes.backtest import backtest_bp
@@ -20,9 +20,10 @@ def register_routes(app: Flask):
     from app.routes.settings import settings_bp
     from app.routes.portfolio import portfolio_bp
     from app.routes.ibkr import ibkr_bp
+    from app.routes.mt5 import mt5_bp
     
     app.register_blueprint(health_bp)
-    app.register_blueprint(auth_bp, url_prefix='/api/user')  # 兼容前端 /api/user/login
+    app.register_blueprint(auth_bp, url_prefix='/api/user')
     app.register_blueprint(kline_bp, url_prefix='/api/indicator')
     app.register_blueprint(analysis_bp, url_prefix='/api/analysis')
     app.register_blueprint(backtest_bp, url_prefix='/api/indicator')
@@ -35,4 +36,5 @@ def register_routes(app: Flask):
     app.register_blueprint(settings_bp, url_prefix='/api/settings')
     app.register_blueprint(portfolio_bp, url_prefix='/api/portfolio')
     app.register_blueprint(ibkr_bp, url_prefix='/api/ibkr')
+    app.register_blueprint(mt5_bp, url_prefix='/api/mt5')
 

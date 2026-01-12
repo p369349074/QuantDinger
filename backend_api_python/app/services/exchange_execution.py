@@ -61,7 +61,7 @@ def load_strategy_configs(strategy_id: int) -> Dict[str, Any]:
         cur = db.cursor()
         cur.execute(
             """
-            SELECT id, exchange_config, trading_config, market_type, leverage, execution_mode
+            SELECT id, exchange_config, trading_config, market_type, leverage, execution_mode, market_category
             FROM qd_strategies_trading
             WHERE id = %s
             """,
@@ -76,6 +76,7 @@ def load_strategy_configs(strategy_id: int) -> Dict[str, Any]:
     market_type = (row.get("market_type") or exchange_config.get("market_type") or "swap").strip()
     leverage = float(row.get("leverage") or trading_config.get("leverage") or exchange_config.get("leverage") or 1.0)
     execution_mode = (row.get("execution_mode") or "signal").strip().lower()
+    market_category = (row.get("market_category") or "Crypto").strip()
 
     return {
         "strategy_id": int(strategy_id),
@@ -84,6 +85,7 @@ def load_strategy_configs(strategy_id: int) -> Dict[str, Any]:
         "market_type": market_type,
         "leverage": leverage,
         "execution_mode": execution_mode,
+        "market_category": market_category,
     }
 
 

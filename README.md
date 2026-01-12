@@ -97,6 +97,7 @@ QuantDinger includes a built-in **LLM-based multi-agent research system** that g
 ### Guides
 - [Python Strategy Development Guide](docs/STRATEGY_DEV_GUIDE.md)
 - [Interactive Brokers (IBKR) Trading Guide](docs/IBKR_TRADING_GUIDE_EN.md) 🆕
+- [MetaTrader 5 (MT5) Trading Guide](docs/MT5_TRADING_GUIDE_EN.md) 🆕
 
 ### Notification Configuration
 - [Telegram Notification Setup](docs/NOTIFICATION_TELEGRAM_CONFIG_EN.md)
@@ -165,8 +166,11 @@ QuantDinger includes a built-in **LLM-based multi-agent research system** that g
 2.  **Strategy Config**: Attach risk management rules (Position sizing, Stop-Loss, Take-Profit).
 3.  **Backtest & AI Optimization**: Run backtests, view rich performance metrics, and **let AI analyze the result to suggest improvements** (e.g., "Adjust MACD threshold to X").
 4.  **Execution Mode**:
-    - **Live Trading**: Direct API execution for 10+ Crypto Exchanges (Binance, OKX, etc.).
-    - **Signal Notification**: For non-executable markets (Stocks/Forex/Futures), send signals via Telegram, Discord, Email, SMS, or Webhook.
+    - **Live Trading**: 
+      - **Cryptocurrency**: Direct API execution for 10+ exchanges (Binance, OKX, Bitget, Bybit, etc.)
+      - **US/HK Stocks**: Via Interactive Brokers (IBKR) 🆕
+      - **Forex**: Via MetaTrader 5 (MT5) 🆕
+    - **Signal Notification**: For markets without live trading support (A-shares/Futures), send signals via Telegram, Discord, Email, SMS, or Webhook.
 
 ### 3. AI Multi-Agent Research
 *Your 24/7 AI Investment Committee.*
@@ -292,19 +296,32 @@ Config lives in `.env` (see `backend_api_python/env.example`): `ENABLE_AGENT_MEM
 
 ---
 
-## 🔌 Supported Exchanges
+## 🔌 Supported Exchanges & Brokers
 
-QuantDinger supports direct API connections to major cryptocurrency exchanges for execution, and uses CCXT for broad market data coverage.
+QuantDinger supports multiple execution methods for different market types:
 
-### Direct API Support
+### Cryptocurrency Exchanges (Direct API)
 
 | Exchange | Markets |
 |:--------:|:---------|
 | Binance | Spot, Futures, Margin |
 | OKX | Spot, Perpetual, Options |
 | Bitget | Spot, Futures, Copy Trading |
+| Bybit | Spot, Linear Futures |
+| Coinbase Exchange | Spot |
+| Kraken | Spot, Futures |
+| KuCoin | Spot, Futures |
+| Gate.io | Spot, Futures |
+| Bitfinex | Spot, Derivatives |
 
-### Also Supported via CCXT
+### Traditional Brokers
+
+| Broker | Markets | Platform |
+|:------:|:--------|:---------|
+| **Interactive Brokers (IBKR)** | US Stocks, HK Stocks | TWS / IB Gateway 🆕 |
+| **MetaTrader 5 (MT5)** | Forex | MT5 Terminal 🆕 |
+
+### Market Data (via CCXT)
 
 Bybit, Gate.io, Kraken, KuCoin, HTX, and 100+ other exchanges for market data.
 
@@ -339,7 +356,7 @@ All UI elements, error messages, and documentation are fully translated. Languag
 | **US Stocks** | Yahoo Finance, Finnhub, Tiingo | ✅ Via IBKR 🆕 |
 | **HK Stocks** | AkShare, East Money | ✅ Via IBKR 🆕 |
 | **CN Stocks (A-shares)** | AkShare, East Money | ⚡ Data only |
-| **Forex** | Finnhub, OANDA | ✅ Via broker API |
+| **Forex** | Finnhub, OANDA | ✅ Via MT5 🆕 |
 | **Futures** | Exchange APIs, AkShare | ⚡ Data only |
 
 ---

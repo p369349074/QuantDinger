@@ -97,6 +97,7 @@ QuantDingerには、ウェブから金融情報を収集し、ローカル市場
 ### 開発ガイド
 - [Python 戦略開発ガイド](docs/STRATEGY_DEV_GUIDE_JA.md)
 - [Interactive Brokers (IBKR) トレーディングガイド](docs/IBKR_TRADING_GUIDE_EN.md) 🆕
+- [MetaTrader 5 (MT5) トレーディングガイド](docs/MT5_TRADING_GUIDE_EN.md) 🆕
 
 ### 通知設定
 - [Telegram 通知設定](docs/NOTIFICATION_TELEGRAM_CONFIG_EN.md)
@@ -165,8 +166,11 @@ QuantDingerには、ウェブから金融情報を収集し、ローカル市場
 2.  **戦略設定**: リスク管理ルール（ポジションサイジング、ストップロス、利益確定）を追加。
 3.  **バックテスト & AI最適化**: バックテストを実行し、豊富なパフォーマンス指標を表示し、**AIに結果を分析させて改善を提案**させます（例：「MACD閾値をXに調整」）。
 4.  **実行モード**:
-    - **実取引**: 直接API実行、10以上の暗号資産取引所（Binance, OKXなど）をサポート。
-    - **シグナル通知**: 実取引を実行しない市場（株式/FX/先物）向けに、Telegram, Discord, Email, SMS, Webhook経由でシグナルを送信。
+    - **実取引**:
+      - **暗号資産**: 直接API実行、10以上の取引所（Binance, OKX, Bitget, Bybitなど）をサポート
+      - **米国/香港株式**: Interactive Brokers (IBKR)経由 🆕
+      - **外国為替**: MetaTrader 5 (MT5)経由 🆕
+    - **シグナル通知**: 実取引をサポートしていない市場（A株/先物）向けに、Telegram, Discord, Email, SMS, Webhook経由でシグナルを送信。
 
 ### 3. AI マルチエージェントリサーチ
 *あなたの24時間365日稼働するAI投資委員会。*
@@ -300,19 +304,32 @@ score = w_{sim}\cdot sim + w_{recency}\cdot recency + w_{returns}\cdot returns\_
 
 ---
 
-## 🔌 対応取引所
+## 🔌 対応取引所とブローカー
 
-QuantDingerは実行のための主要な暗号資産取引所への直接API接続をサポートし、広範な市場データカバレッジのためにCCXTを使用します。
+QuantDingerは複数の市場タイプに対して複数の実行方法をサポートしています：
 
-### 直接APIサポート
+### 暗号資産取引所（直接API）
 
 | 取引所 | 市場 |
 |:--------:|:---------|
 | Binance | 現物, 先物, マージン |
 | OKX | 現物, 無期限, オプション |
 | Bitget | 現物, 先物, コピートレーディング |
+| Bybit | 現物, リニア先物 |
+| Coinbase Exchange | 現物 |
+| Kraken | 現物, 先物 |
+| KuCoin | 現物, 先物 |
+| Gate.io | 現物, 先物 |
+| Bitfinex | 現物, デリバティブ |
 
-### CCXT経由でもサポート
+### 伝統的なブローカー
+
+| ブローカー | 市場 | プラットフォーム |
+|:------:|:--------|:---------|
+| **Interactive Brokers (IBKR)** | 米国株式, 香港株式 | TWS / IB Gateway 🆕 |
+| **MetaTrader 5 (MT5)** | 外国為替 | MT5ターミナル 🆕 |
+
+### 市場データ（CCXT経由）
 
 Bybit、Gate.io、Kraken、KuCoin、HTX、および100以上のその他の取引所が市場データ用にサポートされています。
 
@@ -334,7 +351,7 @@ QuantDingerは、包括的な国際化対応により、世界中のユーザー
 | **米国株** | Yahoo Finance, Finnhub, Tiingo | ✅ IBKR経由 🆕 |
 | **香港株** | AkShare, East Money | ✅ IBKR経由 🆕 |
 | **中国株(A株)** | AkShare, East Money | ⚡ データのみ |
-| **FX** | Finnhub, OANDA | ✅ ブローカーAPI経由 |
+| **FX** | Finnhub, OANDA | ✅ MT5経由 🆕 |
 | **先物** | 取引所API, AkShare | ⚡ データのみ |
 
 ---

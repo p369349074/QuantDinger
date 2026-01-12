@@ -97,6 +97,7 @@ QuantDinger 包含一个内置的**基于 LLM 的多智能体研究系统**，�
 ### 开发指南
 - [Python 策略开发指南](docs/STRATEGY_DEV_GUIDE_CN.md)
 - [盈透证券 (IBKR) 实盘交易指南](docs/IBKR_TRADING_GUIDE_CN.md) 🆕
+- [MetaTrader 5 (MT5) 外汇实盘交易指南](docs/MT5_TRADING_GUIDE_CN.md) 🆕
 
 ### 通知配置
 - [Telegram 通知配置](docs/NOTIFICATION_TELEGRAM_CONFIG_CH.md)
@@ -165,8 +166,11 @@ QuantDinger 包含一个内置的**基于 LLM 的多智能体研究系统**，�
 2.  **策略配置**：附加风险管理规则（仓位管理、止损、止盈）。
 3.  **回测 & AI 优化**：运行回测，查看丰富的性能指标，并**让 AI 分析结果以建议改进**（例如：“调整 MACD 阈值为 X”）。
 4.  **执行模式**：
-    - **实盘交易**：直接 API 执行，支持 10+ 加密货币交易所（Binance, OKX 等）。
-    - **信号通知**：针对非实盘执行的市场（股票/外汇/期货），通过 Telegram, Discord, Email, SMS 或 Webhook 发送信号。
+    - **实盘交易**：
+      - **加密货币**：直接 API 执行，支持 10+ 交易所（Binance, OKX, Bitget, Bybit 等）
+      - **美股/港股**：通过盈透证券 (IBKR) 🆕
+      - **外汇**：通过 MetaTrader 5 (MT5) 🆕
+    - **信号通知**：针对不支持实盘交易的市场（A股/期货），通过 Telegram, Discord, Email, SMS 或 Webhook 发送信号。
 
 ### 3. AI 多智能体投研
 *你的 7x24 小时 AI 投委会。*
@@ -330,19 +334,32 @@ score = w_{sim}\cdot sim + w_{recency}\cdot recency + w_{returns}\cdot returns\_
 
 ---
 
-## 🔌 支持的交易所
+## 🔌 支持的交易所和券商
 
-QuantDinger 支持直接 API 连接到主要加密货币交易所进行执行，并使用 CCXT 获取广泛的行情数据。
+QuantDinger 支持多种市场类型的执行方式：
 
-### 直接 API 支持
+### 加密货币交易所（直接 API）
 
 | 交易所 | 市场 |
 |:--------:|:---------|
 | Binance | 现货, 合约, 杠杆 |
 | OKX | 现货, 永续, 期权 |
 | Bitget | 现货, 合约, 跟单交易 |
+| Bybit | 现货, 线性合约 |
+| Coinbase Exchange | 现货 |
+| Kraken | 现货, 合约 |
+| KuCoin | 现货, 合约 |
+| Gate.io | 现货, 合约 |
+| Bitfinex | 现货, 衍生品 |
 
-### 也支持通过 CCXT
+### 传统券商
+
+| 券商 | 市场 | 平台 |
+|:------:|:--------|:---------|
+| **盈透证券 (IBKR)** | 美股, 港股 | TWS / IB Gateway 🆕 |
+| **MetaTrader 5 (MT5)** | 外汇 | MT5 终端 🆕 |
+
+### 行情数据（通过 CCXT）
 
 Bybit、Gate.io、Kraken、KuCoin、HTX 以及 100+ 其他交易所用于行情数据。
 
@@ -378,7 +395,7 @@ QuantDinger 为全球用户构建，提供全面的国际化支持：
 | **美股** | Yahoo Finance, Finnhub, Tiingo | ✅ 通过盈透证券 🆕 |
 | **港股** | AkShare, 东方财富 | ✅ 通过盈透证券 🆕 |
 | **A股** | AkShare, 东方财富 | ⚡ 仅数据 |
-| **外汇** | Finnhub, OANDA | ✅ 通过券商 API |
+| **外汇** | Finnhub, OANDA | ✅ 通过 MT5 🆕 |
 | **期货** | 交易所 API, AkShare | ⚡ 仅数据 |
 
 ---
