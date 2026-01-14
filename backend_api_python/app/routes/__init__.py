@@ -25,7 +25,7 @@ def register_routes(app: Flask):
     from app.routes.strategy_code import strategy_code_bp
     
     app.register_blueprint(health_bp)
-    app.register_blueprint(auth_bp, url_prefix='/api/user')
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')   # Auth routes
     app.register_blueprint(user_bp, url_prefix='/api/users')  # User management
     app.register_blueprint(kline_bp, url_prefix='/api/indicator')
     app.register_blueprint(analysis_bp, url_prefix='/api/analysis')

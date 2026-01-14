@@ -9,18 +9,123 @@ CREATE TABLE IF NOT EXISTS qd_users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    email VARCHAR(100),
+    email VARCHAR(100) UNIQUE,
     nickname VARCHAR(50),
     avatar VARCHAR(255) DEFAULT '/avatar2.jpg',
     status VARCHAR(20) DEFAULT 'active',  -- active/disabled/pending
     role VARCHAR(20) DEFAULT 'user',       -- admin/manager/user/viewer
+    credits DECIMAL(20,2) DEFAULT 0,       -- 积分余额
+    vip_expires_at TIMESTAMP,              -- VIP过期时间
+    email_verified BOOLEAN DEFAULT FALSE,  -- 邮箱是否已验证
+    referred_by INTEGER,                   -- 邀请人ID
     last_login_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE INDEX IF NOT EXISTS idx_users_referred_by ON qd_users(referred_by);
+
 -- Note: Admin user is created automatically by the application on startup
 -- using ADMIN_USER and ADMIN_PASSWORD from environment variables
+
+-- =============================================================================
+-- 1.5. Credits Log (积分变动日志)
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS qd_credits_log (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES qd_users(id) ON DELETE CASCADE,
+    action VARCHAR(50) NOT NULL,            -- recharge/consume/refund/admin_adjust/vip_grant
+    amount DECIMAL(20,2) NOT NULL,          -- 变动金额（正数增加，负数减少）
+    balance_after DECIMAL(20,2) NOT NULL,   -- 变动后余额
+    feature VARCHAR(50) DEFAULT '',          -- 消费的功能：ai_analysis/strategy_run/backtest 等
+    reference_id VARCHAR(100) DEFAULT '',    -- 关联ID（如订单号、分析任务ID等）
+    remark TEXT DEFAULT '',                  -- 备注
+    operator_id INTEGER,                     -- 操作人ID（管理员调整时记录）
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_credits_log_user_id ON qd_credits_log(user_id);
+CREATE INDEX IF NOT EXISTS idx_credits_log_action ON qd_credits_log(action);
+CREATE INDEX IF NOT EXISTS idx_credits_log_created_at ON qd_credits_log(created_at);
+
+-- =============================================================================
+-- 1.6. Verification Codes (邮箱验证码)
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS qd_verification_codes (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(100) NOT NULL,
+    code VARCHAR(10) NOT NULL,
+    type VARCHAR(20) NOT NULL,              -- register/login/reset_password/change_email/change_password
+    expires_at TIMESTAMP NOT NULL,
+    used_at TIMESTAMP,
+    ip_address VARCHAR(45),
+    attempts INTEGER DEFAULT 0,             -- Failed verification attempts (anti-brute-force)
+    last_attempt_at TIMESTAMP,              -- Last attempt time
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_verification_codes_email ON qd_verification_codes(email);
+CREATE INDEX IF NOT EXISTS idx_verification_codes_type ON qd_verification_codes(type);
+CREATE INDEX IF NOT EXISTS idx_verification_codes_expires ON qd_verification_codes(expires_at);
+
+-- =============================================================================
+-- 1.7. Login Attempts (登录尝试记录 - 防爆破)
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS qd_login_attempts (
+    id SERIAL PRIMARY KEY,
+    identifier VARCHAR(100) NOT NULL,       -- IP address or username
+    identifier_type VARCHAR(10) NOT NULL,   -- 'ip' or 'account'
+    attempt_time TIMESTAMP DEFAULT NOW(),
+    success BOOLEAN DEFAULT FALSE,
+    ip_address VARCHAR(45),
+    user_agent TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_login_attempts_identifier ON qd_login_attempts(identifier, identifier_type);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_time ON qd_login_attempts(attempt_time);
+
+-- =============================================================================
+-- 1.8. OAuth Links (第三方账号关联)
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS qd_oauth_links (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES qd_users(id) ON DELETE CASCADE,
+    provider VARCHAR(20) NOT NULL,          -- 'google' or 'github'
+    provider_user_id VARCHAR(100) NOT NULL,
+    provider_email VARCHAR(100),
+    provider_name VARCHAR(100),
+    provider_avatar VARCHAR(255),
+    access_token TEXT,
+    refresh_token TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(provider, provider_user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_oauth_links_user_id ON qd_oauth_links(user_id);
+CREATE INDEX IF NOT EXISTS idx_oauth_links_provider ON qd_oauth_links(provider);
+
+-- =============================================================================
+-- 1.9. Security Audit Log (安全审计日志)
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS qd_security_logs (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER,
+    action VARCHAR(50) NOT NULL,            -- login/logout/register/reset_password/oauth_login/etc
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    details TEXT,                           -- JSON with additional info
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_security_logs_user_id ON qd_security_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_security_logs_action ON qd_security_logs(action);
+CREATE INDEX IF NOT EXISTS idx_security_logs_created_at ON qd_security_logs(created_at);
 
 -- =============================================================================
 -- 2. Trading Strategies

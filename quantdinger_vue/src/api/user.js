@@ -7,7 +7,7 @@ import request from '@/utils/request'
 
 /**
  * Get user list (admin only)
- * @param {Object} params - { page, page_size }
+ * @param {Object} params - { page, page_size, search }
  */
 export function getUserList (params) {
   return request({
@@ -122,5 +122,67 @@ export function changePassword (data) {
     url: '/api/users/change-password',
     method: 'post',
     data
+  })
+}
+
+/**
+ * Get current user's credits log
+ * @param {Object} params - { page, page_size }
+ */
+export function getMyCreditsLog (params) {
+  return request({
+    url: '/api/users/my-credits-log',
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * Get current user's referral list
+ * @param {Object} params - { page, page_size }
+ */
+export function getMyReferrals (params) {
+  return request({
+    url: '/api/users/my-referrals',
+    method: 'get',
+    params
+  })
+}
+
+// ==================== Billing Management (Admin) ====================
+
+/**
+ * Set user credits (admin only)
+ * @param {Object} data - { user_id, credits, remark }
+ */
+export function setUserCredits (data) {
+  return request({
+    url: '/api/users/set-credits',
+    method: 'post',
+    data
+  })
+}
+
+/**
+ * Set user VIP status (admin only)
+ * @param {Object} data - { user_id, vip_days, vip_expires_at, remark }
+ */
+export function setUserVip (data) {
+  return request({
+    url: '/api/users/set-vip',
+    method: 'post',
+    data
+  })
+}
+
+/**
+ * Get user credits log (admin only)
+ * @param {Object} params - { user_id, page, page_size }
+ */
+export function getUserCreditsLog (params) {
+  return request({
+    url: '/api/users/credits-log',
+    method: 'get',
+    params
   })
 }

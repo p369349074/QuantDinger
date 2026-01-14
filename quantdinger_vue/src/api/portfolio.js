@@ -80,7 +80,8 @@ export function runMonitor (id, params = {}) {
   return request({
     url: `/api/portfolio/monitors/${id}/run`,
     method: 'post',
-    data: params
+    data: params,
+    timeout: 60000 // 60s timeout for monitor API (async mode should return immediately)
   })
 }
 

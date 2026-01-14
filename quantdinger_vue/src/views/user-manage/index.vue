@@ -10,14 +10,26 @@
 
     <!-- Toolbar -->
     <div class="toolbar">
-      <a-button type="primary" @click="showCreateModal">
-        <a-icon type="user-add" />
-        {{ $t('userManage.createUser') || 'Create User' }}
-      </a-button>
-      <a-button @click="loadUsers">
-        <a-icon type="reload" />
-        {{ $t('common.refresh') || 'Refresh' }}
-      </a-button>
+      <div class="toolbar-left">
+        <a-button type="primary" @click="showCreateModal">
+          <a-icon type="user-add" />
+          {{ $t('userManage.createUser') || 'Create User' }}
+        </a-button>
+        <a-button @click="loadUsers">
+          <a-icon type="reload" />
+          {{ $t('common.refresh') || 'Refresh' }}
+        </a-button>
+      </div>
+      <div class="toolbar-right">
+        <a-input-search
+          v-model="searchKeyword"
+          :placeholder="$t('userManage.searchPlaceholder') || 'Search by username/email'"
+          style="width: 280px"
+          allowClear
+          @search="handleSearch"
+          @pressEnter="handleSearch"
+        />
+      </div>
     </div>
 
     <!-- User Table -->
@@ -50,12 +62,38 @@
           <span v-else class="text-muted">{{ $t('userManage.neverLogin') || 'Never' }}</span>
         </template>
 
+        <!-- Credits Column -->
+        <template slot="credits" slot-scope="text">
+          <span class="credits-value">{{ formatCredits(text) }}</span>
+        </template>
+
+        <!-- VIP Column -->
+        <template slot="vip_expires_at" slot-scope="text">
+          <template v-if="text && isVipActive(text)">
+            <a-tag color="gold">
+              <a-icon type="crown" />
+              {{ formatDate(text) }}
+            </a-tag>
+          </template>
+          <span v-else class="text-muted">-</span>
+        </template>
+
         <!-- Actions Column -->
         <template slot="action" slot-scope="text, record">
           <a-space>
             <a-tooltip :title="$t('common.edit') || 'Edit'">
               <a-button type="link" size="small" @click="showEditModal(record)">
                 <a-icon type="edit" />
+              </a-button>
+            </a-tooltip>
+            <a-tooltip :title="$t('userManage.adjustCredits') || 'Adjust Credits'">
+              <a-button type="link" size="small" @click="showCreditsModal(record)">
+                <a-icon type="wallet" style="color: #722ed1" />
+              </a-button>
+            </a-tooltip>
+            <a-tooltip :title="$t('userManage.setVip') || 'Set VIP'">
+              <a-button type="link" size="small" @click="showVipModal(record)">
+                <a-icon type="crown" style="color: #faad14" />
               </a-button>
             </a-tooltip>
             <a-tooltip :title="$t('userManage.resetPassword') || 'Reset Password'">
@@ -185,11 +223,85 @@
         </a-form-item>
       </a-form>
     </a-modal>
+
+    <!-- Adjust Credits Modal -->
+    <a-modal
+      v-model="creditsModalVisible"
+      :title="($t('userManage.adjustCredits') || 'Adjust Credits') + (creditsEditingUser ? ` - ${creditsEditingUser.username}` : '')"
+      :confirmLoading="creditsLoading"
+      @ok="handleSetCredits"
+    >
+      <a-form layout="vertical">
+        <div class="current-credits-info" v-if="creditsEditingUser">
+          <span class="label">{{ $t('userManage.currentCredits') || 'Current Credits' }}:</span>
+          <span class="value">{{ formatCredits(creditsEditingUser.credits) }}</span>
+        </div>
+        <a-form-item :label="$t('userManage.newCredits') || 'New Credits'">
+          <a-input-number
+            v-model="newCredits"
+            :min="0"
+            :precision="2"
+            style="width: 100%"
+            :placeholder="$t('userManage.enterCredits') || 'Enter new credits amount'"
+          />
+        </a-form-item>
+        <a-form-item :label="$t('userManage.remark') || 'Remark'">
+          <a-input
+            v-model="creditsRemark"
+            :placeholder="$t('userManage.remarkPlaceholder') || 'Optional remark'"
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
+
+    <!-- Set VIP Modal -->
+    <a-modal
+      v-model="vipModalVisible"
+      :title="($t('userManage.setVip') || 'Set VIP') + (vipEditingUser ? ` - ${vipEditingUser.username}` : '')"
+      :confirmLoading="vipLoading"
+      @ok="handleSetVip"
+    >
+      <a-form layout="vertical">
+        <div class="current-vip-info" v-if="vipEditingUser && vipEditingUser.vip_expires_at">
+          <span class="label">{{ $t('userManage.currentVip') || 'Current VIP' }}:</span>
+          <span class="value" :class="isVipActive(vipEditingUser.vip_expires_at) ? 'active' : 'expired'">
+            {{ isVipActive(vipEditingUser.vip_expires_at)
+              ? ($t('userManage.vipActive') || 'Active') + ` (${formatDate(vipEditingUser.vip_expires_at)})`
+              : ($t('userManage.vipExpired') || 'Expired') }}
+          </span>
+        </div>
+        <a-form-item :label="$t('userManage.vipDays') || 'VIP Days'">
+          <a-select v-model="vipDays" style="width: 100%">
+            <a-select-option :value="0">{{ $t('userManage.cancelVip') || 'Cancel VIP' }}</a-select-option>
+            <a-select-option :value="7">7 {{ $t('userManage.days') || 'days' }}</a-select-option>
+            <a-select-option :value="30">30 {{ $t('userManage.days') || 'days' }}</a-select-option>
+            <a-select-option :value="90">90 {{ $t('userManage.days') || 'days' }}</a-select-option>
+            <a-select-option :value="180">180 {{ $t('userManage.days') || 'days' }}</a-select-option>
+            <a-select-option :value="365">365 {{ $t('userManage.days') || 'days' }}</a-select-option>
+            <a-select-option :value="-1">{{ $t('userManage.customDate') || 'Custom Date' }}</a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item v-if="vipDays === -1" :label="$t('userManage.vipExpiresAt') || 'VIP Expires At'">
+          <a-date-picker
+            v-model="vipCustomDate"
+            showTime
+            format="YYYY-MM-DD HH:mm:ss"
+            style="width: 100%"
+          />
+        </a-form-item>
+        <a-form-item :label="$t('userManage.remark') || 'Remark'">
+          <a-input
+            v-model="vipRemark"
+            :placeholder="$t('userManage.remarkPlaceholder') || 'Optional remark'"
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 
 <script>
-import { getUserList, createUser, updateUser, deleteUser, resetUserPassword, getRoles } from '@/api/user'
+import { getUserList, createUser, updateUser, deleteUser, resetUserPassword, getRoles, setUserCredits, setUserVip } from '@/api/user'
 import { baseMixin } from '@/store/app-mixin'
 import { mapGetters } from 'vuex'
 
@@ -201,6 +313,7 @@ export default {
       loading: false,
       users: [],
       roles: [],
+      searchKeyword: '',
       pagination: {
         current: 1,
         pageSize: 10,
@@ -214,7 +327,20 @@ export default {
       // Reset Password Modal
       resetPasswordVisible: false,
       resetPasswordLoading: false,
-      resetPasswordUserId: null
+      resetPasswordUserId: null,
+      // Credits Modal
+      creditsModalVisible: false,
+      creditsLoading: false,
+      creditsEditingUser: null,
+      newCredits: 0,
+      creditsRemark: '',
+      // VIP Modal
+      vipModalVisible: false,
+      vipLoading: false,
+      vipEditingUser: null,
+      vipDays: 30,
+      vipCustomDate: null,
+      vipRemark: ''
     }
   },
   computed: {
@@ -240,7 +366,7 @@ export default {
         {
           title: this.$t('userManage.nickname') || 'Nickname',
           dataIndex: 'nickname',
-          width: 120
+          width: 100
         },
         {
           title: this.$t('userManage.email') || 'Email',
@@ -250,25 +376,37 @@ export default {
         {
           title: this.$t('userManage.role') || 'Role',
           dataIndex: 'role',
-          width: 100,
+          width: 90,
           scopedSlots: { customRender: 'role' }
+        },
+        {
+          title: this.$t('userManage.credits') || 'Credits',
+          dataIndex: 'credits',
+          width: 100,
+          scopedSlots: { customRender: 'credits' }
+        },
+        {
+          title: 'VIP',
+          dataIndex: 'vip_expires_at',
+          width: 120,
+          scopedSlots: { customRender: 'vip_expires_at' }
         },
         {
           title: this.$t('userManage.status') || 'Status',
           dataIndex: 'status',
-          width: 100,
+          width: 90,
           scopedSlots: { customRender: 'status' }
         },
         {
           title: this.$t('userManage.lastLogin') || 'Last Login',
           dataIndex: 'last_login_at',
-          width: 160,
+          width: 150,
           scopedSlots: { customRender: 'last_login_at' }
         },
         {
           title: this.$t('common.actions') || 'Actions',
           dataIndex: 'action',
-          width: 150,
+          width: 180,
           scopedSlots: { customRender: 'action' }
         }
       ]
@@ -288,7 +426,8 @@ export default {
       try {
         const res = await getUserList({
           page: this.pagination.current,
-          page_size: this.pagination.pageSize
+          page_size: this.pagination.pageSize,
+          search: this.searchKeyword || ''
         })
         if (res.code === 1) {
           this.users = res.data.items || []
@@ -301,6 +440,11 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+
+    handleSearch () {
+      this.pagination.current = 1
+      this.loadUsers()
     },
 
     async loadRoles () {
@@ -454,6 +598,99 @@ export default {
       if (!timestamp) return ''
       const date = new Date(typeof timestamp === 'number' ? timestamp * 1000 : timestamp)
       return date.toLocaleString()
+    },
+
+    formatCredits (credits) {
+      if (!credits && credits !== 0) return '0'
+      return Number(credits).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+    },
+
+    formatDate (dateStr) {
+      if (!dateStr) return ''
+      const date = new Date(dateStr)
+      return date.toLocaleDateString()
+    },
+
+    isVipActive (expiresAt) {
+      if (!expiresAt) return false
+      return new Date(expiresAt) > new Date()
+    },
+
+    // Credits Modal
+    showCreditsModal (record) {
+      this.creditsEditingUser = record
+      this.newCredits = parseFloat(record.credits) || 0
+      this.creditsRemark = ''
+      this.creditsModalVisible = true
+    },
+
+    async handleSetCredits () {
+      if (this.newCredits < 0) {
+        this.$message.error(this.$t('userManage.creditsNonNegative') || 'Credits cannot be negative')
+        return
+      }
+
+      this.creditsLoading = true
+      try {
+        const res = await setUserCredits({
+          user_id: this.creditsEditingUser.id,
+          credits: this.newCredits,
+          remark: this.creditsRemark
+        })
+        if (res.code === 1) {
+          this.$message.success(res.msg || 'Credits updated successfully')
+          this.creditsModalVisible = false
+          this.loadUsers()
+        } else {
+          this.$message.error(res.msg || 'Update failed')
+        }
+      } catch (error) {
+        this.$message.error('Update failed')
+      } finally {
+        this.creditsLoading = false
+      }
+    },
+
+    // VIP Modal
+    showVipModal (record) {
+      this.vipEditingUser = record
+      this.vipDays = 30
+      this.vipCustomDate = null
+      this.vipRemark = ''
+      this.vipModalVisible = true
+    },
+
+    async handleSetVip () {
+      const data = {
+        user_id: this.vipEditingUser.id,
+        remark: this.vipRemark
+      }
+
+      if (this.vipDays === -1) {
+        if (!this.vipCustomDate) {
+          this.$message.error(this.$t('userManage.selectDate') || 'Please select a date')
+          return
+        }
+        data.vip_expires_at = this.vipCustomDate.toISOString()
+      } else {
+        data.vip_days = this.vipDays
+      }
+
+      this.vipLoading = true
+      try {
+        const res = await setUserVip(data)
+        if (res.code === 1) {
+          this.$message.success(res.msg || 'VIP status updated successfully')
+          this.vipModalVisible = false
+          this.loadUsers()
+        } else {
+          this.$message.error(res.msg || 'Update failed')
+        }
+      } catch (error) {
+        this.$message.error('Update failed')
+      } finally {
+        this.vipLoading = false
+      }
     }
   }
 }
@@ -495,7 +732,18 @@ export default {
   .toolbar {
     margin-bottom: 16px;
     display: flex;
-    gap: 12px;
+    justify-content: space-between;
+    align-items: center;
+
+    .toolbar-left {
+      display: flex;
+      gap: 12px;
+    }
+
+    .toolbar-right {
+      display: flex;
+      gap: 12px;
+    }
   }
 
   .user-table-card {
@@ -549,6 +797,42 @@ export default {
 
       .text-muted {
         color: #6e7681;
+      }
+    }
+  }
+
+  // Credits value style
+  .credits-value {
+    font-weight: 600;
+    color: #722ed1;
+  }
+
+  // Current info styles
+  .current-credits-info,
+  .current-vip-info {
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .label {
+      color: #666;
+    }
+
+    .value {
+      font-weight: 600;
+      color: #1890ff;
+      font-size: 18px;
+
+      &.active {
+        color: #52c41a;
+      }
+
+      &.expired {
+        color: #999;
       }
     }
   }

@@ -10,6 +10,26 @@ const PHPSESSID_KEY = 'PHPSESSID'
 // Locale storage key used by vue-i18n (see src/locales/index.js)
 const LOCALE_KEY = 'lang'
 
+/**
+ * 获取 token，处理 token 可能是字符串或对象的情况
+ */
+function getToken () {
+  let token = storage.get(ACCESS_TOKEN)
+  if (!token) {
+    return null
+  }
+  if (typeof token !== 'string') {
+    // 如果是对象，尝试获取 token 属性
+    if (token && typeof token === 'object') {
+      token = token.token || token.value || null
+    } else {
+      token = null
+    }
+  }
+  // 确保 token 是字符串且不为空
+  return (typeof token === 'string' && token.length > 0) ? token : null
+}
+
 // 创建 axios 实例
 const request = axios.create({
   // API 请求的默认前缀
@@ -38,11 +58,11 @@ const errorHandler = (error) => {
         description: 'Authorization verification failed'
       })
       // 不清理本地 token，避免刷新后丢失登录态；仅跳转到登录页
-      const loginPath = '/user/login'
-      const cur = window.location.pathname + window.location.search
-      if (!cur.includes('/user/login')) {
-        const redirect = encodeURIComponent(cur)
-        window.location.assign(`${loginPath}?redirect=${redirect}`)
+      // 项目使用 hash 模式，需要跳转到 /#/user/login
+      const curHash = window.location.hash || ''
+      if (!curHash.includes('/user/login')) {
+        const redirect = encodeURIComponent(curHash.replace('#', '') || '/')
+        window.location.assign(`/#/user/login?redirect=${redirect}`)
       }
     }
   }
@@ -51,7 +71,8 @@ const errorHandler = (error) => {
 
 // request interceptor
 request.interceptors.request.use(config => {
-  const token = storage.get(ACCESS_TOKEN)
+  // 使用统一的 token 获取函数
+  const token = getToken()
   const lang = storage.get(LOCALE_KEY) || 'en-US'
 
   // Tell backend which UI language user is using, so AI reports can match it.
@@ -67,6 +88,15 @@ request.interceptors.request.use(config => {
     config.headers[ACCESS_TOKEN] = token
     // 兼容后端要求的 token 头
     config.headers['token'] = token
+  } else {
+    // 调试：如果 token 不存在，记录日志
+    if (config.url && config.url.includes('/api/auth/info')) {
+      const rawToken = storage.get(ACCESS_TOKEN)
+      console.warn('Token missing for /api/auth/info request')
+      console.warn('Raw token from storage:', rawToken)
+      console.warn('Token type:', typeof rawToken)
+      console.warn('Token value:', rawToken)
+    }
   }
 
   // 防止缓存导致的 304：为请求添加禁止缓存的头

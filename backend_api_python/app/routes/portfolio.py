@@ -680,25 +680,60 @@ def delete_monitor(monitor_id):
 @portfolio_bp.route('/monitors/<int:monitor_id>/run', methods=['POST'])
 @login_required
 def run_monitor_now(monitor_id):
-    """Manually trigger a monitor to run immediately."""
+    """Manually trigger a monitor to run immediately.
+    
+    Supports two modes:
+    - async=true (default): Returns immediately, runs in background, notifies via notification system
+    - async=false: Waits for completion and returns result (may timeout for large portfolios)
+    """
     try:
         from app.services.portfolio_monitor import run_single_monitor
         
-        # Get language from request body or Accept-Language header
+        user_id = g.user_id
+        
+        # Get parameters from request body
         data = request.get_json(force=True, silent=True) or {}
         language = data.get('language')
+        async_mode = data.get('async', True)  # Default to async mode
         
-        # Fallback to Accept-Language header
+        # Fallback to Accept-Language header for language
         if not language:
             accept_lang = request.headers.get('Accept-Language', '')
             if 'zh' in accept_lang.lower():
-                language = 'en-US'
+                language = 'zh-CN'
             else:
                 language = 'en-US'
         
-        result = run_single_monitor(monitor_id, override_language=language)
-        
-        return jsonify({'code': 1, 'msg': 'success', 'data': result})
+        if async_mode:
+            # Async mode: Start background thread and return immediately
+            import threading
+            
+            def run_in_background(mid, lang, uid):
+                try:
+                    run_single_monitor(mid, override_language=lang, user_id=uid)
+                except Exception as e:
+                    logger.error(f"Background monitor run failed: {e}")
+            
+            thread = threading.Thread(
+                target=run_in_background,
+                args=(monitor_id, language, user_id),
+                daemon=True
+            )
+            thread.start()
+            
+            return jsonify({
+                'code': 1, 
+                'msg': 'success', 
+                'data': {
+                    'status': 'running',
+                    'message': 'Monitor is running in background. Results will be sent via notification.'
+                }
+            })
+        else:
+            # Sync mode: Wait for completion (may timeout)
+            result = run_single_monitor(monitor_id, override_language=language, user_id=user_id)
+            return jsonify({'code': 1, 'msg': 'success', 'data': result})
+            
     except Exception as e:
         logger.error(f"run_monitor_now failed: {str(e)}")
         logger.error(traceback.format_exc())

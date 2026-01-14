@@ -140,6 +140,25 @@ def multi_analysis():
 
         logger.info(f"Analyze request: {market}:{symbol}, use_multi_agent={use_multi_agent}, model={model}")
         
+        # Step 0: Check billing (计费检查)
+        from app.services.billing_service import get_billing_service
+        billing_success, billing_msg = get_billing_service().check_and_consume(
+            user_id=user_id,
+            feature='ai_analysis',
+            reference_id=f'{market}:{symbol}'
+        )
+        if not billing_success:
+            if 'insufficient_credits' in billing_msg:
+                parts = billing_msg.split(':')
+                current = parts[1] if len(parts) > 1 else '0'
+                required = parts[2] if len(parts) > 2 else '?'
+                return jsonify({
+                    'code': 0,
+                    'msg': f'Insufficient credits. Current: {current}, Required: {required}',
+                    'data': {'error_type': 'insufficient_credits', 'current': current, 'required': required}
+                }), 402
+            return jsonify({'code': 0, 'msg': billing_msg, 'data': None}), 400
+        
         # Step 1: Create a "pending" task record first (so user can see progress in history)
         task_id = _store_task(user_id, market, symbol, model or '', language, 'pending', result={}, error_message='')
         

@@ -75,7 +75,7 @@ class UserService:
                 cur.execute(
                     """
                     SELECT id, username, email, nickname, avatar, status, role, 
-                           last_login_at, created_at, updated_at
+                           credits, vip_expires_at, last_login_at, created_at, updated_at
                     FROM qd_users WHERE id = ?
                     """,
                     (user_id,)
@@ -107,12 +107,41 @@ class UserService:
             logger.error(f"get_user_by_username failed: {e}")
             return None
     
+    def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+        """Get user by email (includes password_hash for auth)"""
+        if not email:
+            return None
+        try:
+            with get_db_connection() as db:
+                cur = db.cursor()
+                cur.execute(
+                    """
+                    SELECT id, username, password_hash, email, nickname, avatar, 
+                           status, role, last_login_at, created_at, updated_at
+                    FROM qd_users WHERE LOWER(email) = LOWER(?)
+                    """,
+                    (email,)
+                )
+                row = cur.fetchone()
+                cur.close()
+                return row
+        except Exception as e:
+            logger.error(f"get_user_by_email failed: {e}")
+            return None
+    
     def authenticate(self, username: str, password: str) -> Optional[Dict[str, Any]]:
         """
-        Authenticate user with username and password.
+        Authenticate user with username/email and password.
+        Supports both username and email login.
         Returns user info (without password_hash) if successful, None otherwise.
         """
+        # Try username first
         user = self.get_user_by_username(username)
+        
+        # If not found, try email (supports both username and email login)
+        if not user:
+            user = self.get_user_by_email(username)
+        
         if not user:
             return None
         
@@ -120,7 +149,16 @@ class UserService:
             logger.warning(f"Login attempt for disabled user: {username}")
             return None
         
-        if not self.verify_password(password, user.get('password_hash', '')):
+        password_hash = user.get('password_hash', '')
+        
+        # Check if user has no password (code-login user)
+        if not password_hash or password_hash.strip() == '':
+            logger.info(f"Password login attempted for code-login user: {username}")
+            # Return a special marker to indicate no password set
+            # This allows the caller to provide a more specific error message
+            return {'_no_password': True, **user}
+        
+        if not self.verify_password(password, password_hash):
             return None
         
         # Update last login time
@@ -140,33 +178,41 @@ class UserService:
         user.pop('password_hash', None)
         return user
     
-    def create_user(self, data: Dict[str, Any]) -> Optional[int]:
+    def create_user(self, data: Dict[str, Any] = None, **kwargs) -> Optional[int]:
         """
         Create a new user.
         
         Args:
-            data: {
+            data: dict with user fields, OR use keyword arguments:
                 username: str (required),
-                password: str (required),
+                password: str (optional, can be None for code-login users),
                 email: str (optional),
                 nickname: str (optional),
                 role: str (optional, default 'user'),
-                status: str (optional, default 'active')
-            }
+                status: str (optional, default 'active'),
+                email_verified: bool (optional, default False),
+                referred_by: int (optional, referrer user ID)
         
         Returns:
             New user ID or None if failed
         """
-        username = (data.get('username') or '').strip()
-        password = data.get('password') or ''
+        # Support both dict and kwargs style
+        if data is None:
+            data = kwargs
+        else:
+            data = {**data, **kwargs}
         
-        if not username or not password:
-            raise ValueError("Username and password are required")
+        username = (data.get('username') or '').strip()
+        password = data.get('password')  # Can be None for code-login users
+        
+        if not username:
+            raise ValueError("Username is required")
         
         if len(username) < 3 or len(username) > 50:
             raise ValueError("Username must be 3-50 characters")
         
-        if len(password) < 6:
+        # Password validation only if provided
+        if password and len(password) < 6:
             raise ValueError("Password must be at least 6 characters")
         
         # Check if username already exists
@@ -174,11 +220,14 @@ class UserService:
         if existing:
             raise ValueError("Username already exists")
         
-        password_hash = self.hash_password(password)
+        # Hash password or use empty string for code-login users
+        password_hash = self.hash_password(password) if password else ''
         email = (data.get('email') or '').strip() or None
         nickname = (data.get('nickname') or '').strip() or username
         role = data.get('role', 'user')
         status = data.get('status', 'active')
+        email_verified = data.get('email_verified', False)
+        referred_by = data.get('referred_by')  # Referrer user ID
         
         if role not in self.ROLES:
             role = 'user'
@@ -189,10 +238,10 @@ class UserService:
                 cur.execute(
                     """
                     INSERT INTO qd_users 
-                    (username, password_hash, email, nickname, role, status, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
+                    (username, password_hash, email, nickname, role, status, email_verified, referred_by, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                     """,
-                    (username, password_hash, email, nickname, role, status)
+                    (username, password_hash, email, nickname, role, status, email_verified, referred_by)
                 )
                 db.commit()
                 user_id = cur.lastrowid
@@ -206,7 +255,7 @@ class UserService:
                     user_id = row['id'] if row else None
                     cur.close()
                 
-                logger.info(f"Created user: {username} (id={user_id})")
+                logger.info(f"Created user: {username} (id={user_id}, referred_by={referred_by})")
                 return user_id
         except Exception as e:
             logger.error(f"create_user failed: {e}")
@@ -251,7 +300,7 @@ class UserService:
             return False
     
     def change_password(self, user_id: int, old_password: str, new_password: str) -> bool:
-        """Change user password (requires old password verification)"""
+        """Change user password (requires old password verification, except for users with no password)"""
         user = self.get_user_by_id(user_id)
         if not user:
             return False
@@ -266,7 +315,15 @@ class UserService:
             if not row:
                 return False
             
-            if not self.verify_password(old_password, row['password_hash']):
+            password_hash = row.get('password_hash', '')
+            
+            # If user has no password (code-login user), allow setting password without old password
+            if not password_hash or password_hash.strip() == '':
+                logger.info(f"Setting initial password for code-login user: {user_id}")
+                return self.reset_password(user_id, new_password)
+            
+            # For users with existing password, verify old password
+            if not self.verify_password(old_password, password_hash):
                 return False
         
         return self.reset_password(user_id, new_password)
@@ -292,6 +349,10 @@ class UserService:
             logger.error(f"reset_password failed: {e}")
             return False
     
+    def update_password(self, user_id: int, new_password: str) -> bool:
+        """Alias for reset_password - update user password without old password verification"""
+        return self.reset_password(user_id, new_password)
+    
     def delete_user(self, user_id: int) -> bool:
         """Delete a user"""
         try:
@@ -305,29 +366,37 @@ class UserService:
             logger.error(f"delete_user failed: {e}")
             return False
     
-    def list_users(self, page: int = 1, page_size: int = 20) -> Dict[str, Any]:
-        """List all users with pagination"""
+    def list_users(self, page: int = 1, page_size: int = 20, search: str = None) -> Dict[str, Any]:
+        """List all users with pagination and optional search"""
         offset = (page - 1) * page_size
         
         try:
             with get_db_connection() as db:
                 cur = db.cursor()
                 
+                # Build WHERE clause for search
+                where_clause = ""
+                params = []
+                if search and search.strip():
+                    search_term = f"%{search.strip()}%"
+                    where_clause = "WHERE username LIKE ? OR email LIKE ? OR nickname LIKE ?"
+                    params = [search_term, search_term, search_term]
+                
                 # Get total count
-                cur.execute("SELECT COUNT(*) as count FROM qd_users")
+                count_sql = f"SELECT COUNT(*) as count FROM qd_users {where_clause}"
+                cur.execute(count_sql, tuple(params))
                 total = cur.fetchone()['count']
                 
                 # Get users
-                cur.execute(
-                    """
+                query_sql = f"""
                     SELECT id, username, email, nickname, avatar, status, role,
-                           last_login_at, created_at, updated_at
+                           credits, vip_expires_at, last_login_at, created_at, updated_at
                     FROM qd_users
+                    {where_clause}
                     ORDER BY id DESC
                     LIMIT ? OFFSET ?
-                    """,
-                    (page_size, offset)
-                )
+                """
+                cur.execute(query_sql, tuple(params + [page_size, offset]))
                 users = cur.fetchall()
                 cur.close()
                 
@@ -362,15 +431,18 @@ class UserService:
                     # Create admin using env credentials
                     admin_user = os.getenv('ADMIN_USER', 'admin')
                     admin_password = os.getenv('ADMIN_PASSWORD', 'admin123')
-                    
+                    admin_email = os.getenv('ADMIN_EMAIL', 'admin@example.com')
+
                     self.create_user({
                         'username': admin_user,
                         'password': admin_password,
+                        'email': admin_email,
                         'nickname': 'Administrator',
                         'role': 'admin',
-                        'status': 'active'
+                        'status': 'active',
+                        'email_verified': True  # Admin email is pre-verified
                     })
-                    logger.info(f"Created admin user: {admin_user}")
+                    logger.info(f"Created admin user: {admin_user} ({admin_email})")
         except Exception as e:
             logger.error(f"ensure_admin_exists failed: {e}")
 

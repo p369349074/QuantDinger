@@ -29,7 +29,12 @@ router.beforeEach((to, from, next) => {
   to.meta && typeof to.meta.title !== 'undefined' && setDocumentTitle(`${i18nRender(to.meta.title)} - ${domTitle}`)
 
   // Check whether we have a token (local-only auth).
-  const token = storage.get(ACCESS_TOKEN)
+  // 处理 token 可能是字符串或对象的情况
+  let token = storage.get(ACCESS_TOKEN)
+  if (token && typeof token !== 'string') {
+    token = token.token || token.value || (typeof token === 'object' ? null : token)
+  }
+  token = typeof token === 'string' ? token : null
 
   if (token) {
     // 有 token，允许访问所有页面
