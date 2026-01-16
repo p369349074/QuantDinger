@@ -596,7 +596,7 @@ class TradingExecutor:
             if not klines or len(klines) < 2:
                 logger.error(f"Strategy {strategy_id} failed to fetch K-lines")
                 return
-            logger.info(rf'Strategy {strategy_id} kline number: {len(klines)}')
+            logger.info(rf'Strategy {strategy_id} history kline number: {len(klines)}')
             
             # 转换为DataFrame
             df = self._klines_to_dataframe(klines)
@@ -1093,7 +1093,8 @@ class TradingExecutor:
                 market='Crypto',
                 symbol=symbol,
                 timeframe=timeframe,
-                limit=limit
+                limit=limit,
+                before_time=int(time.time()),
             )
         except Exception as e:
             logger.error(f"Failed to fetch K-lines: {str(e)}")

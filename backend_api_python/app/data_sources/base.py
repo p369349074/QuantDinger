@@ -140,10 +140,10 @@ class BaseDataSource(ABC):
         if klines:
             latest_time = datetime.fromtimestamp(klines[-1]['time'])
             time_diff = (datetime.now() - latest_time).total_seconds()
-            # logger.info(
-            #     f"{self.name}: {symbol} 获取 {len(klines)} 条数据, "
-            #     f"最新时间: {latest_time}, 延迟: {time_diff:.0f}秒"
-            # )
+            logger.info(
+                f"{self.name}: {symbol} 获取 {len(klines)} 条数据, "
+                f"最新时间: {latest_time}, 延迟: {time_diff:.0f}秒"
+            )
             
             # 检查数据是否过旧
             max_diff = TIMEFRAME_SECONDS.get(timeframe, 3600) * 2
