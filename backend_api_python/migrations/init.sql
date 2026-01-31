@@ -305,8 +305,8 @@ CREATE TABLE IF NOT EXISTS qd_indicator_codes (
 
 );
 
-CREATE INDEX idx_indicator_codes_user_id ON qd_indicator_codes USING btree (user_id);
-CREATE INDEX idx_indicator_review_status ON qd_indicator_codes USING btree (review_status);
+CREATE INDEX IF NOT EXISTS idx_indicator_codes_user_id ON qd_indicator_codes USING btree (user_id);
+CREATE INDEX IF NOT EXISTS idx_indicator_review_status ON qd_indicator_codes USING btree (review_status);
 
 -- =============================================================================
 -- 8. AI Decisions
