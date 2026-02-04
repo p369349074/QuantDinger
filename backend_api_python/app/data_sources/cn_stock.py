@@ -1,11 +1,18 @@
 """
 CN/HK stock data source.
 Supports A-Share and H-Share with multiple public sources.
-Priority (AShare): Eastmoney (intraday/daily) > yfinance (daily) > akshare (daily, optional).
-Priority (HShare): Tencent (intraday) > Eastmoney/Tencent (daily) > yfinance (daily) > akshare (daily, optional).
+
+改进版本（参考 daily_stock_analysis 项目）:
+- 多数据源自动切换（按优先级）
+- 熔断器保护
+- 数据缓存
+- 防封禁策略（随机休眠+UA轮换）
+
+Priority (AShare): Eastmoney > Tencent > Sina > Akshare > yfinance
+Priority (HShare): Tencent > Eastmoney > yfinance > akshare
 """
 import json
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime, timedelta
 import requests
 
@@ -13,6 +20,9 @@ import yfinance as yf
 
 from app.data_sources.base import BaseDataSource
 from app.data_sources.us_stock import USStockDataSource
+from app.data_sources.data_manager import get_ashare_data_manager, AShareDataManager
+from app.data_sources.circuit_breaker import get_ashare_circuit_breaker, get_realtime_circuit_breaker
+from app.data_sources.rate_limiter import get_request_headers, get_tencent_limiter, get_eastmoney_limiter
 from app.utils.logger import get_logger
 from app.utils.http import get_retry_session
 
@@ -166,7 +176,14 @@ class TencentDataMixin:
 
 
 class AShareDataSource(BaseDataSource, TencentDataMixin):
-    """A-Share data source."""
+    """
+    A-Share data source.
+    
+    改进版本：使用 AShareDataManager 实现多数据源自动切换
+    - 熔断器保护
+    - 数据缓存
+    - 防封禁策略
+    """
     
     name = "AShare"
     
@@ -190,6 +207,11 @@ class AShareDataSource(BaseDataSource, TencentDataMixin):
     
     def __init__(self):
         self.us_stock_source = USStockDataSource()
+        # 使用新的数据管理器
+        self._data_manager = get_ashare_data_manager()
+        # 熔断器和限流器
+        self._circuit_breaker = get_ashare_circuit_breaker()
+        self._em_limiter = get_eastmoney_limiter()
     
     def get_kline(
         self,
@@ -198,11 +220,28 @@ class AShareDataSource(BaseDataSource, TencentDataMixin):
         limit: int,
         before_time: Optional[int] = None
     ) -> List[Dict[str, Any]]:
-        """Fetch A-Share Kline data."""
-        klines = []
+        """
+        Fetch A-Share Kline data.
         
-        # Prefer Eastmoney (supports most intraday timeframes)
-        klines = self._fetch_eastmoney_ashare(symbol, timeframe, limit)
+        改进版本：使用数据管理器自动切换数据源
+        """
+        # 使用新的数据管理器获取数据（自动切换数据源）
+        klines, source = self._data_manager.get_kline(
+            symbol=symbol,
+            timeframe=timeframe,
+            limit=limit,
+            before_time=before_time
+        )
+        
+        if klines:
+            self.log_result(symbol, klines, timeframe)
+            return klines
+        
+        # 如果数据管理器失败，使用传统方式作为最后备选
+        logger.warning(f"[AShare] 数据管理器获取 {symbol} 失败，尝试传统方式")
+        
+        # 传统方式：直接调用东方财富
+        klines = self._fetch_eastmoney_ashare_legacy(symbol, timeframe, limit)
         if klines:
             klines = self.filter_and_limit(klines, limit, before_time)
             self.log_result(symbol, klines, timeframe)
@@ -212,20 +251,24 @@ class AShareDataSource(BaseDataSource, TencentDataMixin):
         if timeframe in ('1D', '1W'):
             yahoo_symbol = self._to_yahoo_symbol(symbol)
             if yahoo_symbol:
-                # logger.info(f"尝试使用 yfinance 获取A股: {yahoo_symbol}")
                 klines = self.us_stock_source.get_kline(yahoo_symbol, timeframe, limit, before_time)
                 if klines:
-                    # logger.info(f"yfinance 成功获取 {len(klines)} 条A股数据")
                     return klines
         
-        # Fallback: akshare (daily/weekly)
-        if HAS_AKSHARE and timeframe in self.AKSHARE_PERIOD_MAP:
-            klines = self._fetch_akshare(symbol, timeframe, limit, before_time)
-            if klines:
-                return klines
-        
         logger.warning(f"AShare {symbol} data fetch failed")
-        return klines
+        return []
+    
+    def _fetch_eastmoney_ashare_legacy(
+        self,
+        symbol: str,
+        timeframe: str,
+        limit: int
+    ) -> List[Dict[str, Any]]:
+        """
+        传统方式获取东方财富数据（兜底用）
+        不使用新的熔断器和限流器，保持原有逻辑
+        """
+        return self._fetch_eastmoney_ashare(symbol, timeframe, limit)
     
     def _to_tencent_symbol(self, symbol: str) -> Optional[str]:
         """转换为腾讯财经格式"""
@@ -391,7 +434,10 @@ class AShareDataSource(BaseDataSource, TencentDataMixin):
         """
         获取A股实时报价
         
-        使用东方财富实时行情API获取实时报价
+        改进版本：使用数据管理器自动切换数据源
+        - 熔断器保护
+        - 数据缓存（60秒TTL）
+        - 多数据源自动切换
         
         Returns:
             dict: {
@@ -406,6 +452,21 @@ class AShareDataSource(BaseDataSource, TencentDataMixin):
         """
         symbol = (symbol or '').strip()
         
+        # 使用数据管理器获取实时报价（自动切换数据源）
+        quote, source = self._data_manager.get_realtime_quote(symbol)
+        if quote and quote.get('last', 0) > 0:
+            return quote
+        
+        # 如果数据管理器失败，使用传统方式作为兜底
+        logger.debug(f"[AShare] 数据管理器获取 {symbol} 实时报价失败，尝试传统方式")
+        return self._get_ticker_legacy(symbol)
+    
+    def _get_ticker_legacy(self, symbol: str) -> Dict[str, Any]:
+        """
+        传统方式获取实时报价（兜底用）
+        
+        保持原有逻辑，不使用熔断器和限流器
+        """
         # 优先使用东方财富实时行情 API
         try:
             # 判断市场
@@ -423,8 +484,6 @@ class AShareDataSource(BaseDataSource, TencentDataMixin):
             params = {
                 'secid': secid,
                 'fields': 'f43,f44,f45,f46,f47,f48,f57,f58,f60,f169,f170',
-                # f43=最新价, f44=最高价, f45=最低价, f46=开盘价
-                # f60=昨收价, f169=涨跌额, f170=涨跌幅
             }
             
             session = get_retry_session()
@@ -434,9 +493,8 @@ class AShareDataSource(BaseDataSource, TencentDataMixin):
                 if data and data.get('data'):
                     d = data['data']
                     last_price = d.get('f43', 0)
-                    # 东方财富返回的价格是整数（分），需要除以100
                     if last_price and last_price > 0:
-                        divisor = 100 if last_price > 1000 else 1  # 价格超过10元时用分表示
+                        divisor = 100 if last_price > 1000 else 1
                         return {
                             'last': last_price / divisor,
                             'high': d.get('f44', 0) / divisor,
@@ -444,7 +502,7 @@ class AShareDataSource(BaseDataSource, TencentDataMixin):
                             'open': d.get('f46', 0) / divisor,
                             'previousClose': d.get('f60', 0) / divisor,
                             'change': d.get('f169', 0) / divisor,
-                            'changePercent': d.get('f170', 0) / 100  # 涨跌幅是整数（%*100）
+                            'changePercent': d.get('f170', 0) / 100
                         }
         except Exception as e:
             logger.debug(f"Eastmoney ticker failed for {symbol}: {e}")
@@ -472,28 +530,6 @@ class AShareDataSource(BaseDataSource, TencentDataMixin):
                             }
         except Exception as e:
             logger.debug(f"Tencent ticker failed for {symbol}: {e}")
-        
-        # 第三备选: Akshare
-        try:
-            import akshare as ak
-            # 使用 akshare 获取实时行情
-            df = ak.stock_zh_a_spot_em()
-            if df is not None and not df.empty:
-                # 在数据中查找对应股票
-                row = df[df['代码'] == symbol]
-                if not row.empty:
-                    row = row.iloc[0]
-                    return {
-                        'last': float(row.get('最新价', 0) or 0),
-                        'change': float(row.get('涨跌额', 0) or 0),
-                        'changePercent': float(row.get('涨跌幅', 0) or 0),
-                        'high': float(row.get('最高', 0) or 0),
-                        'low': float(row.get('最低', 0) or 0),
-                        'open': float(row.get('今开', 0) or 0),
-                        'previousClose': float(row.get('昨收', 0) or 0)
-                    }
-        except Exception as e:
-            logger.debug(f"Akshare ticker failed for {symbol}: {e}")
         
         return {'last': 0, 'symbol': symbol}
 

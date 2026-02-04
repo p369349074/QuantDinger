@@ -658,9 +658,9 @@ CONFIG_SCHEMA = {
                 'key': 'SEARCH_PROVIDER',
                 'label': 'Search Provider',
                 'type': 'select',
-                'options': ['google', 'bing', 'none'],
-                'default': 'google',
-                'description': 'Web search provider for AI research features'
+                'options': ['bocha', 'tavily', 'google', 'bing', 'none'],
+                'default': 'bocha',
+                'description': 'Web search provider for AI research features. Bocha recommended for A-share news'
             },
             {
                 'key': 'SEARCH_MAX_RESULTS',
@@ -668,6 +668,36 @@ CONFIG_SCHEMA = {
                 'type': 'number',
                 'default': '10',
                 'description': 'Maximum search results to return'
+            },
+            # Tavily Search API
+            {
+                'key': 'TAVILY_API_KEYS',
+                'label': 'Tavily API Keys',
+                'type': 'password',
+                'required': False,
+                'link': 'https://tavily.com/',
+                'link_text': 'settings.link.getApiKey',
+                'description': 'Tavily Search API keys, comma-separated for rotation. Free 1000 requests/month'
+            },
+            # Bocha Search API
+            {
+                'key': 'BOCHA_API_KEYS',
+                'label': 'Bocha API Keys',
+                'type': 'password',
+                'required': False,
+                'link': 'https://bochaai.com/',
+                'link_text': 'settings.link.getApiKey',
+                'description': 'Bocha Search API keys, comma-separated for rotation. Best for A-share news'
+            },
+            # SerpAPI
+            {
+                'key': 'SERPAPI_KEYS',
+                'label': 'SerpAPI Keys',
+                'type': 'password',
+                'required': False,
+                'link': 'https://serpapi.com/',
+                'link_text': 'settings.link.getApiKey',
+                'description': 'SerpAPI keys for Google/Bing search, comma-separated for rotation'
             },
             {
                 'key': 'SEARCH_GOOGLE_API_KEY',

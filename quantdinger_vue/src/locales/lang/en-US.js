@@ -1281,6 +1281,12 @@ const locale = {
   'trading-assistant.stopAll': 'Stop All',
   'trading-assistant.deleteAll': 'Delete All',
   'trading-assistant.symbolCount': 'symbols',
+  'trading-assistant.strategyCount': 'strategies',
+  'trading-assistant.groupBy': 'Group By',
+  'trading-assistant.groupByStrategy': 'Strategy',
+  'trading-assistant.groupBySymbol': 'Symbol',
+  'trading-assistant.timeframe': 'Timeframe',
+  'trading-assistant.indicator': 'Indicator',
   'trading-assistant.status.running': 'Running',
   'trading-assistant.status.stopped': 'Stopped',
   'trading-assistant.status.error': 'Error',
@@ -2216,6 +2222,9 @@ const locale = {
   // Settings fields - Search
   'settings.field.SEARCH_PROVIDER': 'Search Provider',
   'settings.field.SEARCH_MAX_RESULTS': 'Max Results',
+  'settings.field.TAVILY_API_KEYS': 'Tavily API Keys',
+  'settings.field.BOCHA_API_KEYS': 'Bocha API Keys',
+  'settings.field.SERPAPI_KEYS': 'SerpAPI Keys',
   'settings.field.SEARCH_GOOGLE_API_KEY': 'Google API Key',
   'settings.field.SEARCH_GOOGLE_CX': 'Google CX',
   'settings.field.SEARCH_BING_API_KEY': 'Bing API Key',
@@ -2223,6 +2232,10 @@ const locale = {
 
   // Settings descriptions (config item descriptions)
   // Note: These are optional since backend already provides English descriptions
+  'settings.desc.SEARCH_PROVIDER': 'Web search provider for AI research. Bocha recommended for A-share news',
+  'settings.desc.TAVILY_API_KEYS': 'Tavily Search API keys, comma-separated for rotation. Free 1000 requests/month',
+  'settings.desc.BOCHA_API_KEYS': 'Bocha Search API keys, comma-separated for rotation. Best for A-share news',
+  'settings.desc.SERPAPI_KEYS': 'SerpAPI keys for Google/Bing search, comma-separated for rotation',
   'settings.desc.ORDER_MODE': 'maker: Limit order first (lower fees), market: Market order (instant fill)',
   'settings.desc.MAKER_WAIT_SEC': 'Wait time for limit order fill before switching to market order',
   'settings.desc.MAKER_OFFSET_BPS': 'Price offset in basis points. Buy: price*(1-offset), Sell: price*(1+offset)',

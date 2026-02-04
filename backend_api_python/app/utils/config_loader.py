@@ -127,6 +127,15 @@ def load_addon_config() -> Dict[str, Any]:
         ('SEARCH_GOOGLE_API_KEY', 'search.google.api_key', 'string'),
         ('SEARCH_GOOGLE_CX', 'search.google.cx', 'string'),
         ('SEARCH_BING_API_KEY', 'search.bing.api_key', 'string'),
+        
+        # Tavily (AI-optimized search)
+        ('TAVILY_API_KEYS', 'tavily.api_keys', 'string'),
+        
+        # Bocha (Chinese search optimization)
+        ('BOCHA_API_KEYS', 'bocha.api_keys', 'string'),
+        
+        # SerpAPI (Google/Bing scraper)
+        ('SERPAPI_KEYS', 'serpapi.api_keys', 'string'),
     ]
 
     for env_name, dotted_key, value_type in mappings:

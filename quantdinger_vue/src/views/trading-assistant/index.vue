@@ -18,6 +18,21 @@
             </a-button>
           </div>
 
+          <!-- 分组方式切换 -->
+          <div class="group-mode-switch">
+            <span class="group-mode-label">{{ $t('trading-assistant.groupBy') }}:</span>
+            <a-radio-group v-model="groupByMode" size="small" button-style="solid">
+              <a-radio-button value="strategy">
+                <a-icon type="folder" />
+                {{ $t('trading-assistant.groupByStrategy') }}
+              </a-radio-button>
+              <a-radio-button value="symbol">
+                <a-icon type="stock" />
+                {{ $t('trading-assistant.groupBySymbol') }}
+              </a-radio-button>
+            </a-radio-group>
+          </div>
+
           <a-spin :spinning="loading">
             <a-empty v-if="!loading && strategies.length === 0" :description="$t('trading-assistant.noStrategy')" />
             <div v-else class="strategy-grouped-list">
@@ -27,10 +42,10 @@
                 <div class="strategy-group-header" @click="toggleGroup(group.id)">
                   <div class="group-header-left">
                     <a-icon :type="collapsedGroups[group.id] ? 'right' : 'down'" class="collapse-icon" />
-                    <a-icon type="folder" class="group-icon" />
+                    <a-icon :type="groupByMode === 'symbol' ? 'stock' : 'folder'" class="group-icon" />
                     <span class="group-name">{{ group.baseName }}</span>
                     <a-tag size="small" color="blue">{{ group.strategies.length }} {{
-                      $t('trading-assistant.symbolCount') }}</a-tag>
+                      groupByMode === 'symbol' ? $t('trading-assistant.strategyCount') : $t('trading-assistant.symbolCount') }}</a-tag>
                   </div>
                   <div class="group-header-right" @click.stop>
                     <span v-if="group.runningCount > 0" class="group-status running">
@@ -69,10 +84,28 @@
                     <div class="strategy-item-content">
                       <div class="strategy-item-header">
                         <div class="strategy-name-wrapper">
-                          <span class="info-item" v-if="item.trading_config && item.trading_config.symbol">
-                            <a-icon type="dollar" />
-                            {{ item.trading_config.symbol }}
-                          </span>
+                          <!-- 按策略分组：显示 Symbol -->
+                          <template v-if="groupByMode === 'strategy'">
+                            <span class="info-item" v-if="item.trading_config && item.trading_config.symbol">
+                              <a-icon type="dollar" />
+                              {{ item.trading_config.symbol }}
+                            </span>
+                          </template>
+                          <!-- 按 Symbol 分组：显示策略名称、周期、指标 -->
+                          <template v-else>
+                            <span class="info-item strategy-name-text">
+                              <a-icon type="thunderbolt" />
+                              {{ item.displayInfo ? item.displayInfo.strategyName : item.strategy_name }}
+                            </span>
+                            <a-tag size="small" color="cyan" v-if="item.displayInfo && item.displayInfo.timeframe">
+                              <a-icon type="clock-circle" style="margin-right: 2px;" />
+                              {{ item.displayInfo.timeframe }}
+                            </a-tag>
+                            <a-tag size="small" color="purple" v-if="item.displayInfo && item.displayInfo.indicatorName && item.displayInfo.indicatorName !== '-'">
+                              <a-icon type="line-chart" style="margin-right: 2px;" />
+                              {{ item.displayInfo.indicatorName }}
+                            </a-tag>
+                          </template>
                           <span
                             class="status-label"
                             :class="[
@@ -920,7 +953,10 @@
                   <a-checkbox value="telegram">{{ $t('trading-assistant.notify.telegram') }}</a-checkbox>
                   <a-checkbox value="discord">{{ $t('trading-assistant.notify.discord') }}</a-checkbox>
                   <a-checkbox value="webhook">{{ $t('trading-assistant.notify.webhook') }}</a-checkbox>
+<<<<<<< HEAD
                   <a-checkbox value="phone">{{ $t('trading-assistant.notify.phone') }}</a-checkbox>
+=======
+>>>>>>> 6876016 (sss)
                 </a-checkbox-group>
                 <div class="form-item-hint">{{ $t('trading-assistant.form.notifyChannelsHint') }}</div>
               </a-form-item>
@@ -1241,7 +1277,9 @@
       :confirmLoading="addingSymbol"
       width="600px"
       :okText="$t('trading-assistant.form.confirmAdd')"
-      :cancelText="$t('trading-assistant.form.cancel')">
+      :cancelText="$t('trading-assistant.form.cancel')"
+      :maskClosable="false"
+      :keyboard="false">
       <div class="add-symbol-modal-content">
         <!-- 市场类型Tab -->
         <a-tabs v-model="addSymbolMarket" @change="handleAddSymbolMarketChange" class="market-tabs">
@@ -1574,6 +1612,13 @@ export default {
     },
     // 策略分组显示
     groupedStrategies () {
+      if (this.groupByMode === 'symbol') {
+        return this.groupedBySymbol
+      }
+      return this.groupedByStrategy
+    },
+    // 按策略分组（原有逻辑）
+    groupedByStrategy () {
       const groups = {}
       const ungrouped = []
 
@@ -1610,6 +1655,51 @@ export default {
 
       return { groups: groupList, ungrouped }
     },
+    // 按 Symbol 分组
+    groupedBySymbol () {
+      const groups = {}
+      const ungrouped = []
+
+      for (const s of this.strategies) {
+        const tc = s.trading_config || {}
+        const symbol = tc.symbol
+        if (symbol && symbol.trim()) {
+          if (!groups[symbol]) {
+            groups[symbol] = {
+              id: `symbol_${symbol}`,
+              baseName: symbol,
+              strategies: [],
+              runningCount: 0,
+              stoppedCount: 0
+            }
+          }
+          // 添加策略详情信息
+          const strategyInfo = {
+            ...s,
+            displayInfo: {
+              strategyName: s.strategy_name || s.group_base_name || 'Unnamed',
+              timeframe: tc.timeframe || '-',
+              indicatorName: s.indicator_name || (s.indicator_config && s.indicator_config.name) || '-'
+            }
+          }
+          groups[symbol].strategies.push(strategyInfo)
+          if (s.status === 'running') {
+            groups[symbol].runningCount++
+          } else {
+            groups[symbol].stoppedCount++
+          }
+        } else {
+          ungrouped.push(s)
+        }
+      }
+
+      // 转换为数组，按 symbol 名称排序
+      const groupList = Object.values(groups).sort((a, b) => {
+        return a.baseName.localeCompare(b.baseName)
+      })
+
+      return { groups: groupList, ungrouped }
+    },
     // Check if selected channels are configured in user profile
     unconfiguredChannels () {
       const missing = []
@@ -1627,6 +1717,11 @@ export default {
       if (this.notifyChannelsUi.includes('discord')) {
         if (!this.userNotificationSettings.discord_webhook) {
           missing.push('Discord')
+        }
+      }
+      if (this.notifyChannelsUi.includes('webhook')) {
+        if (!this.userNotificationSettings.webhook_url) {
+          missing.push('Webhook')
         }
       }
       // Phone/SMS check if needed
@@ -1695,6 +1790,8 @@ export default {
       selectedSymbols: [],
       // 策略组折叠状态
       collapsedGroups: {},
+      // 分组模式: 'strategy' 或 'symbol'
+      groupByMode: 'strategy',
       // 添加交易对弹窗相关
       showAddSymbolModal: false,
       addSymbolMarket: 'Crypto',
@@ -2410,12 +2507,12 @@ export default {
           })
           await this.handleIndicatorChange(finalId)
 
-          // 恢复已保存的指标参数值
+          // 恢复已保存的指标参数值 - 使用 $set 确保响应式
           const savedParams = strategy.trading_config?.indicator_params
           if (savedParams && typeof savedParams === 'object') {
             Object.keys(savedParams).forEach(key => {
               if (key in this.indicatorParamValues) {
-                this.indicatorParamValues[key] = savedParams[key]
+                this.$set(this.indicatorParamValues, key, savedParams[key])
               }
             })
           }
@@ -2869,10 +2966,12 @@ export default {
           // 响应拦截器已返回 response.data，所以直接访问 res.code 和 res.data
           if (res && res.code === 1 && Array.isArray(res.data)) {
             this.indicatorParams = res.data
-            // 初始化参数值为默认值
+            // 初始化参数值为默认值 - 先构建完整对象再赋值，确保响应式
+            const paramValues = {}
             res.data.forEach(p => {
-              this.indicatorParamValues[p.name] = p.default
+              paramValues[p.name] = p.default
             })
+            this.indicatorParamValues = paramValues
           }
         } catch (err) {
           console.warn('Failed to load indicator params:', err)
@@ -3993,6 +4092,44 @@ export default {
         }
       }
 
+      // 分组模式切换
+      .group-mode-switch {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 0 12px;
+        border-bottom: 1px solid #f0f0f0;
+        margin-bottom: 12px;
+
+        .group-mode-label {
+          font-size: 13px;
+          color: #8c8c8c;
+          font-weight: 500;
+        }
+
+        /deep/ .ant-radio-group {
+          .ant-radio-button-wrapper {
+            font-size: 12px;
+            padding: 0 10px;
+            height: 26px;
+            line-height: 24px;
+            border-radius: 4px;
+
+            &:first-child {
+              border-radius: 4px 0 0 4px;
+            }
+
+            &:last-child {
+              border-radius: 0 4px 4px 0;
+            }
+
+            .anticon {
+              margin-right: 4px;
+            }
+          }
+        }
+      }
+
       /deep/ .ant-card-body {
         flex: 1;
         overflow-y: auto;
@@ -4301,6 +4438,19 @@ export default {
               overflow: hidden;
               text-overflow: ellipsis;
               white-space: nowrap;
+
+              &.strategy-name-text {
+                font-weight: 500;
+                color: #1e3a5f;
+                max-width: 120px;
+              }
+            }
+
+            /deep/ .ant-tag {
+              margin-right: 0;
+              font-size: 11px;
+              line-height: 18px;
+              padding: 0 6px;
             }
           }
         }

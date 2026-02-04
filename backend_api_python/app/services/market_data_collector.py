@@ -890,15 +890,16 @@ class MarketDataCollector:
         """
         获取新闻和情绪数据
         
-        策略：
-        1. 使用结构化API (Finnhub) - 无需深度阅读
-        2. 只获取标题和摘要 - 不读取全文
-        3. 多来源聚合 - Finnhub + 市场特定来源
+        策略（按优先级）：
+        1. 结构化API (Finnhub) - 美股首选
+        2. akshare 多源 - A股首选（东方财富/新浪/同花顺/雪球）
+        3. 搜索引擎 (Bocha/Tavily) - 补充搜索
+        4. 情绪分析 - Finnhub 社交媒体情绪
         """
         news_list = []
         sentiment = {}
         
-        # 1) Finnhub 新闻 (最可靠)
+        # === 1) Finnhub 新闻 (美股首选) ===
         if self._finnhub_client:
             try:
                 end_date = datetime.now().strftime('%Y-%m-%d')
@@ -908,29 +909,32 @@ class MarketDataCollector:
                 
                 if market == 'USStock':
                     raw_news = self._finnhub_client.company_news(symbol, _from=start_date, to=end_date)
-                else:
-                    # 通用新闻
+                elif market == 'Crypto':
+                    # 加密货币通用新闻
+                    raw_news = self._finnhub_client.general_news('crypto', min_id=0)
+                elif market not in ('AShare', 'HShare'):
+                    # 其他市场通用新闻
                     raw_news = self._finnhub_client.general_news('general', min_id=0)
                 
                 if raw_news:
-                    for item in raw_news[:10]:  # 最多10条
+                    for item in raw_news[:10]:
                         if not item.get('headline'):
                             continue
                         news_list.append({
                             "datetime": datetime.fromtimestamp(item.get('datetime', 0)).strftime('%Y-%m-%d %H:%M'),
                             "headline": item.get('headline', ''),
-                            "summary": item.get('summary', '')[:300] if item.get('summary') else '',  # 截断摘要
+                            "summary": item.get('summary', '')[:300] if item.get('summary') else '',
                             "source": item.get('source', 'Finnhub'),
                             "url": item.get('url', ''),
-                            "sentiment": item.get('sentiment', 'neutral'),  # Finnhub有时提供情绪
+                            "sentiment": item.get('sentiment', 'neutral'),
                         })
+                    logger.info(f"Finnhub 新闻获取成功: {len(news_list)} 条")
             except Exception as e:
                 logger.debug(f"Finnhub news fetch failed: {e}")
         
-        # 2) Finnhub 情绪分数 (如果可用)
+        # === 2) Finnhub 情绪分数 (美股社交媒体情绪) ===
         if self._finnhub_client and market == 'USStock':
             try:
-                # Finnhub 提供社交媒体情绪
                 social = self._finnhub_client.stock_social_sentiment(symbol)
                 if social:
                     sentiment['reddit'] = social.get('reddit', {})
@@ -938,31 +942,183 @@ class MarketDataCollector:
             except Exception as e:
                 logger.debug(f"Finnhub sentiment fetch failed: {e}")
         
-        # 3) A股特定新闻 (akshare)
+        # === 3) A股多源新闻 (akshare) ===
         if market == 'AShare' and self._ak:
-            try:
-                # 个股新闻
-                df = self._ak.stock_news_em(symbol=symbol)
-                if df is not None and not df.empty:
-                    for _, row in df.head(10).iterrows():
-                        news_list.append({
-                            "datetime": str(row.get('发布时间', ''))[:16],
-                            "headline": row.get('新闻标题', ''),
-                            "summary": row.get('新闻内容', '')[:200] if row.get('新闻内容') else '',
-                            "source": row.get('文章来源', 'eastmoney'),
-                            "url": row.get('新闻链接', ''),
-                            "sentiment": 'neutral',
-                        })
-            except Exception as e:
-                logger.debug(f"akshare news fetch failed: {e}")
+            ashare_news = self._get_ashare_news_multi_source(symbol)
+            news_list.extend(ashare_news)
+        
+        # === 4) 港股新闻 (akshare) ===
+        if market == 'HShare' and self._ak:
+            hshare_news = self._get_hshare_news(symbol)
+            news_list.extend(hshare_news)
+        
+        # === 5) 搜索引擎补充 (如果新闻太少) ===
+        if len(news_list) < 5:
+            search_news = self._get_news_from_search(market, symbol, company_name)
+            news_list.extend(search_news)
+        
+        # 去重（按标题）
+        seen_titles = set()
+        unique_news = []
+        for item in news_list:
+            title = item.get('headline', '')
+            if title and title not in seen_titles:
+                seen_titles.add(title)
+                unique_news.append(item)
         
         # 按时间排序
-        news_list.sort(key=lambda x: x.get('datetime', ''), reverse=True)
+        unique_news.sort(key=lambda x: x.get('datetime', ''), reverse=True)
         
         return {
-            "news": news_list[:15],  # 最多15条
+            "news": unique_news[:15],  # 最多15条
             "sentiment": sentiment,
         }
+    
+    def _get_ashare_news_multi_source(self, symbol: str) -> List[Dict[str, Any]]:
+        """
+        A股多源新闻获取
+        
+        来源（按优先级）：
+        1. 东方财富个股新闻 (stock_news_em)
+        2. 新浪财经滚动新闻 (stock_news_sina)
+        3. 同花顺个股新闻 (stock_news_ths)
+        4. 雪球热帖 (stock_xuqiu)
+        """
+        news_list = []
+        
+        # 1) 东方财富个股新闻
+        try:
+            df = self._ak.stock_news_em(symbol=symbol)
+            if df is not None and not df.empty:
+                for _, row in df.head(8).iterrows():
+                    news_list.append({
+                        "datetime": str(row.get('发布时间', ''))[:16],
+                        "headline": row.get('新闻标题', ''),
+                        "summary": row.get('新闻内容', '')[:200] if row.get('新闻内容') else '',
+                        "source": "东方财富",
+                        "url": row.get('新闻链接', ''),
+                        "sentiment": 'neutral',
+                    })
+                logger.debug(f"东方财富新闻: {len(df)} 条")
+        except Exception as e:
+            logger.debug(f"东方财富新闻获取失败: {e}")
+        
+        # 2) 新浪财经个股新闻
+        try:
+            # 注意：akshare 的新浪新闻接口可能需要股票名称而非代码
+            df = self._ak.stock_news_sina(symbol=symbol)
+            if df is not None and not df.empty:
+                for _, row in df.head(5).iterrows():
+                    title = row.get('title', '') or row.get('新闻标题', '')
+                    if title and title not in [n.get('headline') for n in news_list]:
+                        news_list.append({
+                            "datetime": str(row.get('time', row.get('发布时间', '')))[:16],
+                            "headline": title,
+                            "summary": row.get('content', row.get('新闻内容', ''))[:200] if row.get('content') or row.get('新闻内容') else '',
+                            "source": "新浪财经",
+                            "url": row.get('url', row.get('新闻链接', '')),
+                            "sentiment": 'neutral',
+                        })
+                logger.debug(f"新浪财经新闻: {len(df)} 条")
+        except Exception as e:
+            logger.debug(f"新浪财经新闻获取失败: {e}")
+        
+        # 3) 同花顺个股新闻
+        try:
+            df = self._ak.stock_news_ths(symbol=symbol)
+            if df is not None and not df.empty:
+                for _, row in df.head(5).iterrows():
+                    title = row.get('标题', '') or row.get('title', '')
+                    if title and title not in [n.get('headline') for n in news_list]:
+                        news_list.append({
+                            "datetime": str(row.get('发布时间', row.get('time', '')))[:16],
+                            "headline": title,
+                            "summary": row.get('内容', row.get('content', ''))[:200] if row.get('内容') or row.get('content') else '',
+                            "source": "同花顺",
+                            "url": row.get('链接', row.get('url', '')),
+                            "sentiment": 'neutral',
+                        })
+                logger.debug(f"同花顺新闻: {len(df)} 条")
+        except Exception as e:
+            logger.debug(f"同花顺新闻获取失败: {e}")
+        
+        # 4) 雪球热帖（社区讨论）
+        try:
+            df = self._ak.stock_xuqiu(symbol=symbol)
+            if df is not None and not df.empty:
+                for _, row in df.head(3).iterrows():
+                    title = row.get('标题', '') or row.get('title', '')
+                    if title and title not in [n.get('headline') for n in news_list]:
+                        news_list.append({
+                            "datetime": str(row.get('发布时间', row.get('time', '')))[:16],
+                            "headline": title,
+                            "summary": row.get('内容摘要', row.get('content', ''))[:200] if row.get('内容摘要') or row.get('content') else '',
+                            "source": "雪球",
+                            "url": row.get('链接', row.get('url', '')),
+                            "sentiment": 'neutral',
+                        })
+                logger.debug(f"雪球热帖: {len(df)} 条")
+        except Exception as e:
+            logger.debug(f"雪球热帖获取失败: {e}")
+        
+        return news_list
+    
+    def _get_hshare_news(self, symbol: str) -> List[Dict[str, Any]]:
+        """港股新闻获取"""
+        news_list = []
+        
+        try:
+            # 港股新闻 (如果 akshare 支持)
+            df = self._ak.stock_hk_spot_em()
+            # 港股一般没有专门的新闻接口，可以通过搜索补充
+        except Exception as e:
+            logger.debug(f"港股新闻获取失败: {e}")
+        
+        return news_list
+    
+    def _get_news_from_search(
+        self, market: str, symbol: str, company_name: str = None
+    ) -> List[Dict[str, Any]]:
+        """
+        从搜索引擎获取新闻
+        
+        使用增强的搜索服务 (Bocha/Tavily/SerpAPI)
+        """
+        news_list = []
+        
+        try:
+            from app.services.search import get_search_service
+            search_service = get_search_service()
+            
+            if not search_service.is_available:
+                return news_list
+            
+            # 构建搜索名称
+            search_name = company_name or symbol
+            
+            # 搜索股票新闻
+            response = search_service.search_stock_news(
+                stock_code=symbol,
+                stock_name=search_name,
+                market=market,
+                max_results=5
+            )
+            
+            if response.success and response.results:
+                for result in response.results:
+                    news_list.append({
+                        "datetime": result.published_date or datetime.now().strftime('%Y-%m-%d'),
+                        "headline": result.title,
+                        "summary": result.snippet[:200] if result.snippet else '',
+                        "source": f"搜索:{result.source}",
+                        "url": result.url,
+                        "sentiment": result.sentiment,
+                    })
+                logger.info(f"搜索引擎新闻补充: {len(news_list)} 条 (来源: {response.provider})")
+        except Exception as e:
+            logger.debug(f"搜索引擎新闻获取失败: {e}")
+        
+        return news_list
 
 
 # 全局实例

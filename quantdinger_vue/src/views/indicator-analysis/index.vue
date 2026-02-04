@@ -393,6 +393,8 @@
         @ok="confirmIndicatorParams"
         @cancel="cancelIndicatorParams"
         :width="500"
+        :maskClosable="false"
+        :keyboard="false"
       >
         <div v-if="pendingIndicator" class="params-config-modal">
           <div class="indicator-info">
