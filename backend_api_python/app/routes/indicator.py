@@ -24,6 +24,7 @@ import numpy as np
 from app.utils.db import get_db_connection
 from app.utils.logger import get_logger
 from app.utils.auth import login_required
+from app.services.indicator_params import IndicatorCaller
 import requests
 
 logger = get_logger(__name__)
@@ -659,3 +660,93 @@ IMPORTANT: Output Python code directly, without explanations, without descriptio
             "X-Accel-Buffering": "no",
         },
     )
+
+
+@indicator_bp.route("/callIndicator", methods=["POST"])
+@login_required
+def call_indicator():
+    """
+    调用另一个指标（供前端 Pyodide 环境使用）
+    
+    POST /api/indicator/callIndicator
+    Body: {
+        "indicatorRef": int | str,  # 指标ID或名称
+        "klineData": List[Dict],      # K线数据
+        "params": Dict,              # 传递给被调用指标的参数（可选）
+        "currentIndicatorId": int     # 当前指标ID（用于循环依赖检测，可选）
+    }
+    
+    Returns:
+        {
+            "code": 1,
+            "data": {
+                "df": List[Dict],    # 执行后的DataFrame（转换为JSON）
+                "columns": List[str]  # DataFrame的列名
+            }
+        }
+    """
+    try:
+        data = request.get_json() or {}
+        indicator_ref = data.get("indicatorRef")
+        kline_data = data.get("klineData", [])
+        params = data.get("params") or {}
+        current_indicator_id = data.get("currentIndicatorId")
+        
+        if not indicator_ref:
+            return jsonify({
+                "code": 0,
+                "msg": "indicatorRef is required",
+                "data": None
+            }), 400
+        
+        if not kline_data or not isinstance(kline_data, list):
+            return jsonify({
+                "code": 0,
+                "msg": "klineData must be a non-empty list",
+                "data": None
+            }), 400
+        
+        # 获取用户ID
+        user_id = g.user_id
+        
+        # 创建 IndicatorCaller
+        indicator_caller = IndicatorCaller(user_id, current_indicator_id)
+        
+        # 将前端传入的K线数据转换为DataFrame
+        df = pd.DataFrame(kline_data)
+        
+        # 确保必要的列存在
+        required_columns = ['open', 'high', 'low', 'close', 'volume']
+        for col in required_columns:
+            if col not in df.columns:
+                df[col] = 0.0
+        
+        # 转换数据类型
+        df['open'] = df['open'].astype('float64')
+        df['high'] = df['high'].astype('float64')
+        df['low'] = df['low'].astype('float64')
+        df['close'] = df['close'].astype('float64')
+        df['volume'] = df['volume'].astype('float64')
+        
+        # 调用指标
+        result_df = indicator_caller.call_indicator(indicator_ref, df, params)
+        
+        # 将DataFrame转换为JSON格式（前端可以使用的格式）
+        result_dict = result_df.to_dict(orient='records')
+        
+        return jsonify({
+            "code": 1,
+            "msg": "success",
+            "data": {
+                "df": result_dict,
+                "columns": list(result_df.columns)
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error calling indicator: {e}", exc_info=True)
+        return jsonify({
+            "code": 0,
+            "msg": str(e),
+            "data": None
+        }), 500

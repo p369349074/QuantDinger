@@ -17,7 +17,8 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Production image (using nginx)
-FROM nginx:alpine
+# Use specific version to avoid mirror registry issues
+FROM nginx:1.25-alpine
 
 # Copy build artifacts
 COPY --from=builder /app/dist /usr/share/nginx/html

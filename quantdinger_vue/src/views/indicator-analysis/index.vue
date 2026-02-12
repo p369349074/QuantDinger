@@ -392,6 +392,7 @@
         :confirmLoading="loadingParams"
         @ok="confirmIndicatorParams"
         @cancel="cancelIndicatorParams"
+        @afterClose="handleParamsModalAfterClose"
         :width="500"
         :maskClosable="false"
         :keyboard="false"
@@ -746,6 +747,8 @@ export default {
     const indicatorParams = ref([]) // 指标参数声明
     const indicatorParamValues = ref({}) // 用户设置的参数值
     const loadingParams = ref(false)
+    // 保存每个指标的参数值（key: indicatorId, value: { paramName: paramValue }）
+    const savedIndicatorParams = ref({})
 
     // 折叠状态
     const customSectionCollapsed = ref(false) // 我创建的指标区域是否折叠
@@ -1416,10 +1419,34 @@ export default {
           if (res && res.code === 1 && Array.isArray(res.data) && res.data.length > 0) {
             // 有参数，显示配置弹窗
             indicatorParams.value = res.data
-            indicatorParamValues.value = {}
+            // 获取指标的唯一标识（用于保存参数值）
+            const indicatorKey = `${source}-${indicator.id}`
+            // 先检查是否有保存的参数值
+            const savedParams = savedIndicatorParams.value[indicatorKey]
+            // 先清空，然后逐个设置，确保响应式正常工作
+            const newParamValues = {}
             res.data.forEach(p => {
-              indicatorParamValues.value[p.name] = p.default
+              // 如果有保存的值，使用保存的值；否则使用默认值
+              // 需要处理类型转换
+              let value = savedParams && savedParams[p.name] !== undefined
+                ? savedParams[p.name]
+                : p.default
+
+              // 根据参数类型进行类型转换
+              if (p.type === 'int') {
+                value = parseInt(value) || 0
+              } else if (p.type === 'float') {
+                value = parseFloat(value) || 0.0
+              } else if (p.type === 'bool') {
+                value = value === true || value === 'true' || value === 1 || value === '1'
+              } else {
+                value = value || ''
+              }
+
+              newParamValues[p.name] = value
             })
+            // 一次性设置所有值，确保响应式更新
+            indicatorParamValues.value = newParamValues
             pendingIndicator.value = indicator
             pendingSource.value = source
             showParamsModal.value = true
@@ -1440,6 +1467,10 @@ export default {
     // 确认参数配置并运行指标
     const confirmIndicatorParams = () => {
       if (pendingIndicator.value) {
+        // 保存参数值（用于下次打开时使用）
+        const indicatorKey = `${pendingSource.value}-${pendingIndicator.value.id}`
+        savedIndicatorParams.value[indicatorKey] = { ...indicatorParamValues.value }
+
         // 将参数传递给指标
         const indicatorWithParams = {
           ...pendingIndicator.value,
@@ -1454,9 +1485,29 @@ export default {
 
     // 取消参数配置
     const cancelIndicatorParams = () => {
+      // 保存参数值（在关闭前保存）
+      saveCurrentParams()
       showParamsModal.value = false
-      pendingIndicator.value = null
-      pendingSource.value = ''
+      // 延迟清空，确保 afterClose 能访问到数据
+      setTimeout(() => {
+        pendingIndicator.value = null
+        pendingSource.value = ''
+      }, 100)
+    }
+
+    // 保存当前参数值
+    const saveCurrentParams = () => {
+      if (pendingIndicator.value && pendingSource.value) {
+        const indicatorKey = `${pendingSource.value}-${pendingIndicator.value.id}`
+        // 深拷贝参数值，确保保存的是当前值
+        savedIndicatorParams.value[indicatorKey] = JSON.parse(JSON.stringify(indicatorParamValues.value))
+      }
+    }
+
+    // 弹窗关闭后的处理
+    const handleParamsModalAfterClose = () => {
+      // 确保参数值已保存
+      saveCurrentParams()
     }
 
     // 运行指标代码（从编辑器）
@@ -1891,6 +1942,28 @@ export default {
       }
     })
 
+    // 监听参数值变化，实时保存
+    watch(
+      () => indicatorParamValues.value,
+      (newVal) => {
+        // 只有在弹窗打开且有 pendingIndicator 时才保存
+        if (showParamsModal.value && pendingIndicator.value && pendingSource.value) {
+          const indicatorKey = `${pendingSource.value}-${pendingIndicator.value.id}`
+          // 深拷贝保存，避免引用问题
+          savedIndicatorParams.value[indicatorKey] = JSON.parse(JSON.stringify(newVal))
+        }
+      },
+      { deep: true, immediate: false }
+    )
+
+    // 监听参数配置弹窗关闭
+    watch(showParamsModal, (newVal) => {
+      if (!newVal) {
+        // 弹窗关闭时，确保参数值已保存
+        saveCurrentParams()
+      }
+    })
+
     return {
       userId,
       klineChart,
@@ -1955,6 +2028,7 @@ getMarketColor,
       loadingParams,
       confirmIndicatorParams,
       cancelIndicatorParams,
+      handleParamsModalAfterClose,
       // 回测相关
       showBacktestModal,
       backtestIndicator,

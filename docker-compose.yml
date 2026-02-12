@@ -66,6 +66,8 @@ services:
     build:
       context: ./quantdinger_vue
       dockerfile: Dockerfile
+      # Force pull from official registry to avoid mirror issues
+      pull: true
     container_name: quantdinger-frontend
     restart: unless-stopped
     ports:
