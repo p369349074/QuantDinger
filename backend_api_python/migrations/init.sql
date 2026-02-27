@@ -803,6 +803,36 @@ BEGIN
 END $$;
 
 -- =============================================================================
+-- Quick Trades (manual / discretionary orders from Quick Trade Panel)
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS qd_quick_trades (
+    id              SERIAL PRIMARY KEY,
+    user_id         INTEGER NOT NULL REFERENCES qd_users(id) ON DELETE CASCADE,
+    credential_id   INTEGER DEFAULT 0,
+    exchange_id     VARCHAR(40) NOT NULL DEFAULT '',
+    symbol          VARCHAR(60) NOT NULL DEFAULT '',
+    side            VARCHAR(10) NOT NULL DEFAULT '',       -- buy / sell
+    order_type      VARCHAR(20) NOT NULL DEFAULT 'market', -- market / limit
+    amount          DECIMAL(24, 8) DEFAULT 0,
+    price           DECIMAL(24, 8) DEFAULT 0,
+    leverage        INTEGER DEFAULT 1,
+    market_type     VARCHAR(20) DEFAULT 'swap',            -- swap / spot
+    tp_price        DECIMAL(24, 8) DEFAULT 0,
+    sl_price        DECIMAL(24, 8) DEFAULT 0,
+    status          VARCHAR(20) DEFAULT 'submitted',       -- submitted / filled / failed / cancelled
+    exchange_order_id VARCHAR(120) DEFAULT '',
+    filled_amount   DECIMAL(24, 8) DEFAULT 0,
+    avg_fill_price  DECIMAL(24, 8) DEFAULT 0,
+    error_msg       TEXT DEFAULT '',
+    source          VARCHAR(40) DEFAULT 'manual',          -- ai_radar / ai_analysis / indicator / manual
+    raw_result      JSONB,
+    created_at      TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_quick_trades_user    ON qd_quick_trades(user_id);
+CREATE INDEX IF NOT EXISTS idx_quick_trades_created ON qd_quick_trades(created_at DESC);
+
+-- =============================================================================
 -- Completion Notice
 -- =============================================================================
 DO $$

@@ -27,8 +27,8 @@
 
   <p align="center">
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square&logo=apache" alt="License"></a>
+    <img src="https://img.shields.io/badge/Version-2.2.1-orange?style=flat-square" alt="Version">
     <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
-    <img src="https://img.shields.io/badge/Vue.js-2.x-4FC08D?style=flat-square&logo=vue.js&logoColor=white" alt="Vue">
     <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
     <img src="https://img.shields.io/github/stars/brokermr810/QuantDinger?style=flat-square&logo=github" alt="Stars">
   </p>
@@ -62,12 +62,12 @@ QuantDinger is built for traders, researchers, and engineers who:
 
 ### Core Value
 
-- **🔓 Apache 2.0 Open Source (Code)**: Permissive and commercial-friendly
+- **🔓 Apache 2.0 Open Source (Backend)**: Permissive and commercial-friendly
 - **🐍 Python-Native & Visual**: Write indicators in Python with AI assistance, visualize on built-in K-line charts
 - **🤖 AI-Loop Optimization**: AI analyzes backtest results to suggest parameter tuning, forming a closed optimization loop
 - **🌍 Universal Market Access**: Crypto (Live), US Stocks (IBKR), Forex (MT5), Futures (Data/Notify)
 - **💳 Built-in Monetization**: Membership subscription, credit system, USDT on-chain payment
-- **⚡ Docker & Clean Arch**: 4-line command deployment with modern tech stack
+- **⚡ Docker One-Click Deploy**: `docker-compose up -d` — zero dependency, zero build, production-ready in 2 minutes
 
 ---
 
@@ -82,17 +82,64 @@ QuantDinger is built for traders, researchers, and engineers who:
 
 ---
 
-## 📚 Documentation
+## 📚 Documentation Index
 
-### Guides
-- [Python Strategy Development Guide](docs/STRATEGY_DEV_GUIDE.md)
-- [Interactive Brokers (IBKR) Trading Guide](docs/IBKR_TRADING_GUIDE_EN.md) 🆕
-- [MetaTrader 5 (MT5) Trading Guide](docs/MT5_TRADING_GUIDE_EN.md) 🆕
+All detailed guides and tutorials are in the [`docs/`](docs/) folder. Click any link below to jump directly.
 
-### Notification Configuration
-- [Telegram Notification Setup](docs/NOTIFICATION_TELEGRAM_CONFIG_EN.md)
-- [Email (SMTP) Notification Setup](docs/NOTIFICATION_EMAIL_CONFIG_EN.md)
-- [SMS (Twilio) Notification Setup](docs/NOTIFICATION_SMS_CONFIG_EN.md)
+### 📋 General
+
+| Document | Description |
+|----------|-------------|
+| [Changelog](docs/CHANGELOG.md) | Version history, new features, bug fixes, and migration notes |
+| [Multi-User Setup](docs/multi-user-setup.md) | PostgreSQL-based multi-user deployment guide |
+
+### 🐍 Strategy Development
+
+| Document | Language |
+|----------|----------|
+| [Strategy Development Guide](docs/STRATEGY_DEV_GUIDE.md) | 🇺🇸 English |
+| [策略开发指南](docs/STRATEGY_DEV_GUIDE_CN.md) | 🇨🇳 简体中文 |
+| [策略開發指南](docs/STRATEGY_DEV_GUIDE_TW.md) | 🇹🇼 繁體中文 |
+| [ストラテジー開発ガイド](docs/STRATEGY_DEV_GUIDE_JA.md) | 🇯🇵 日本語 |
+| [전략 개발 가이드](docs/STRATEGY_DEV_GUIDE_KO.md) | 🇰🇷 한국어 |
+
+### 📈 Cross-Sectional Strategy
+
+| Document | Language |
+|----------|----------|
+| [Cross-Sectional Strategy Guide](docs/CROSS_SECTIONAL_STRATEGY_GUIDE_EN.md) | 🇺🇸 English |
+| [截面策略开发指南](docs/CROSS_SECTIONAL_STRATEGY_GUIDE_CN.md) | 🇨🇳 简体中文 |
+
+### 🏦 Broker Integration
+
+| Document | Description |
+|----------|-------------|
+| [IBKR Trading Guide](docs/IBKR_TRADING_GUIDE_EN.md) | Interactive Brokers (US Stocks) integration |
+| [MT5 Trading Guide (EN)](docs/MT5_TRADING_GUIDE_EN.md) | MetaTrader 5 (Forex) integration — English |
+| [MT5 交易指南 (CN)](docs/MT5_TRADING_GUIDE_CN.md) | MetaTrader 5 (Forex) 集成指南 — 中文 |
+
+### 🔐 OAuth Configuration
+
+| Document | Language |
+|----------|----------|
+| [OAuth Configuration (EN)](docs/OAUTH_CONFIG_EN.md) | 🇺🇸 Google & GitHub OAuth setup |
+| [OAuth 配置指南 (CN)](docs/OAUTH_CONFIG_CN.md) | 🇨🇳 Google & GitHub OAuth 配置 |
+
+### 🔔 Notification Configuration
+
+| Channel | English | 中文 |
+|---------|---------|------|
+| **Telegram** | [Setup Guide](docs/NOTIFICATION_TELEGRAM_CONFIG_EN.md) | [配置指南](docs/NOTIFICATION_TELEGRAM_CONFIG_CH.md) |
+| **Email (SMTP)** | [Setup Guide](docs/NOTIFICATION_EMAIL_CONFIG_EN.md) | [配置指南](docs/NOTIFICATION_EMAIL_CONFIG_CH.md) |
+| **SMS (Twilio)** | [Setup Guide](docs/NOTIFICATION_SMS_CONFIG_EN.md) | [配置指南](docs/NOTIFICATION_SMS_CONFIG_CH.md) |
+
+### 💻 Code Examples
+
+| File | Description |
+|------|-------------|
+| [docs/examples/](docs/examples/) | Python strategy code examples and templates |
+
+---
 
 ## 📸 Visual Tour
 
@@ -175,13 +222,14 @@ QuantDinger is built for traders, researchers, and engineers who:
 *Fast, Accurate, Multi-Market Intelligence.*
 
 - **Fast Analysis Mode**: Single LLM call architecture for quick, accurate analysis
-- **AI Trading Opportunities Radar** 🆕: Auto-scans Crypto, US Stocks, and Forex markets every hour, displaying opportunities in a rolling carousel
+- **AI Trading Opportunities Radar**: Auto-scans Crypto, US Stocks, and Forex markets every hour, displaying opportunities in a rolling carousel
+- **Quick Trade Panel (⚡闪电交易)**: Side-sliding trade panel — see an AI signal or indicator opportunity, click "Trade Now" to instantly place an order without leaving the page. Supports market/limit orders, leverage, TP/SL price, and one-click position close.
 - **ATR-Based Trading Levels**: Stop-loss and take-profit recommendations based on technical analysis
 - **Analysis Memory**: Store analysis results for history review and continuous learning
 - **Strategic Integration**: AI analysis can serve as a "Market Filter" for your strategies
 
-### 4. Membership & Billing System 🆕
-*Built-in Monetization for SaaS Deployment.*
+### 4. Membership & Billing System
+*Built-in Monetization for Deployment.*
 
 - **Subscription Plans**: Monthly / Yearly / Lifetime tiers with configurable pricing
 - **Credit System**: Each plan includes credits; lifetime members receive monthly credit bonuses
@@ -193,7 +241,7 @@ QuantDinger is built for traders, researchers, and engineers who:
 
 - **Publish & Share**: Share your Python indicators with the community
 - **Credit-Based Purchase**: Buy premium indicators from other users with credits
-- **VIP Free Indicators** 🆕: Mark indicators as "VIP Free" — VIP members can use them without spending credits
+- **VIP Free Indicators**: Mark indicators as "VIP Free" — VIP members can use them without spending credits
 - **Rating & Reviews**: Rate and review purchased indicators
 - **Live Performance Tracking**: Real-time performance stats aggregated from backtests and live trades
 
@@ -320,10 +368,10 @@ Simply configure your preferred provider's API key in `.env`. The system auto-de
 ### 11. Tech Stack
 
 - **Backend**: Python (Flask) + PostgreSQL + Redis (optional)
-- **Frontend**: Vue 2 + Ant Design Vue + KlineCharts/ECharts
+- **Frontend**: Pre-built (Ant Design Vue + KlineCharts/ECharts)
 - **Payment**: USDT TRC20 on-chain (HD Wallet xpub derivation + TronGrid API)
 - **Mobile**: Vue 3 + Capacitor (Android / iOS) — see `QuantDinger-Mobile/`
-- **Deployment**: Docker Compose (with PostgreSQL)
+- **Deployment**: Docker Compose (one-click, zero build)
 - **Current Version**: V2.2.1 ([Changelog](docs/CHANGELOG.md))
 
 ---
@@ -381,120 +429,165 @@ All UI elements, error messages, and documentation are fully translated. Languag
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Docker One-Click Deploy)
 
-### Option 1: Docker (Recommended)
+> **Prerequisites**: Docker & Docker Compose installed.  
+> No Node.js, no Python environment needed — everything runs in containers.
+
+### 1. Clone & Configure
 
 ```bash
-# 1. Clone & configure
 git clone https://github.com/brokermr810/QuantDinger.git
 cd QuantDinger
+```
+
+### 2. Set Up Environment
+
+```bash
+# Copy the environment template
 cp backend_api_python/env.example backend_api_python/.env
+```
 
-# 2. Edit .env — set your admin password & AI API key
-#    ADMIN_USER=quantdinger
-#    ADMIN_PASSWORD=your_password
-#    OPENROUTER_API_KEY=your_key    (optional, for AI features)
+> **Windows PowerShell**:
+> ```powershell
+> Copy-Item backend_api_python\env.example -Destination backend_api_python\.env
+> ```
 
-# 3. Start all services
+Edit `backend_api_python/.env` with your settings:
+
+```ini
+# Required — Change these for production!
+ADMIN_USER=quantdinger
+ADMIN_PASSWORD=your_secure_password
+SECRET_KEY=your_random_secret_key
+
+# Optional — Enable AI features
+OPENROUTER_API_KEY=your_openrouter_key
+# or
+OPENAI_API_KEY=your_openai_key
+```
+
+### 3. Launch
+
+```bash
 docker-compose up -d --build
 ```
 
-> **Windows PowerShell**: use `Copy-Item backend_api_python\env.example -Destination backend_api_python\.env` instead of `cp`.
-
-**That's it!** Services will be available at:
+**That's it!** 🎉 Wait about 30 seconds for all services to start.
 
 | Service | URL |
 |---------|-----|
-| Frontend UI | http://localhost:8888 |
-| Backend API | http://localhost:5000 |
+| **Frontend UI** | http://localhost:8888 |
+| Backend API | http://localhost:5000 (internal) |
+| PostgreSQL | localhost:5432 (internal) |
 
 Default login: `quantdinger` / `123456` (change in `.env` for production).
 
-#### Common Docker Commands
+### Common Docker Commands
 
 ```bash
-docker-compose ps                  # View status
-docker-compose logs -f backend     # View backend logs
-docker-compose restart             # Restart services
-docker-compose up -d --build       # Rebuild & restart
-docker-compose down                # Stop services
+docker-compose ps                  # View service status
+docker-compose logs -f backend     # View backend logs (real-time)
+docker-compose logs -f frontend    # View frontend/nginx logs
+docker-compose restart backend     # Restart backend only
+docker-compose up -d --build       # Rebuild & restart all
+docker-compose down                # Stop all services
 ```
 
-#### Update to Latest Version
+### Update to Latest Version
 
 ```bash
-git pull && docker-compose up -d --build
+git pull
+docker-compose up -d --build
 ```
 
-#### Backup & Restore
+### Backup & Restore
 
 ```bash
 # Backup database
-docker exec quantdinger-db pg_dump -U quantdinger quantdinger > backup.sql
+docker exec quantdinger-db pg_dump -U quantdinger quantdinger > backup_$(date +%Y%m%d).sql
 
 # Restore database
 cat backup.sql | docker exec -i quantdinger-db psql -U quantdinger quantdinger
 ```
 
----
+### Custom Port
 
-### Option 2: Local Development
+Create a `.env` file in the project root to override docker-compose defaults:
 
-**Prerequisites**: Python 3.10+, Node.js 16+, PostgreSQL 14+
-
-```bash
-# 1. Setup database
-sudo -u postgres psql -c "CREATE DATABASE quantdinger; CREATE USER quantdinger WITH ENCRYPTED PASSWORD 'your_password'; GRANT ALL PRIVILEGES ON DATABASE quantdinger TO quantdinger;"
-psql -U quantdinger -d quantdinger -f backend_api_python/migrations/init.sql
-
-# 2. Start backend
-cd backend_api_python
-pip install -r requirements.txt
-cp env.example .env              # Edit .env with your DATABASE_URL
-python run.py                    # → http://localhost:5000
-
-# 3. Start frontend (in another terminal)
-cd quantdinger_vue
-npm install
-npm run serve                    # → http://localhost:8000
+```ini
+FRONTEND_PORT=3000          # Change frontend port (default: 8888)
+BACKEND_PORT=127.0.0.1:5001 # Change backend port (default: 5000)
+DB_PORT=127.0.0.1:5433      # Change database port (default: 5432)
 ```
 
 ---
 
-### Architecture
+## 🏗️ Architecture
 
 ```text
-┌─────────────────────────────┐
-│      quantdinger_vue         │
-│   (Vue 2 + Ant Design Vue)   │
-└──────────────┬──────────────┘
-               │  HTTP (/api/*)
-               ▼
-┌─────────────────────────────┐
-│     backend_api_python       │
-│   (Flask + strategy runtime) │
-└──────────────┬──────────────┘
-               │
-               ├─ PostgreSQL (multi-user, orders, membership)
-               ├─ Redis (optional cache)
-               ├─ TronGrid API (USDT payment verification)
-               └─ Data providers / LLMs / Exchanges
+┌────────────────────────────────────────┐
+│           Docker Compose               │
+│                                        │
+│  ┌──────────────────────────────────┐  │
+│  │  frontend (Nginx)                │  │
+│  │  Pre-built static files          │  │
+│  │  → :8888                         │  │
+│  └──────────────┬───────────────────┘  │
+│                 │ /api/* proxy          │
+│                 ▼                       │
+│  ┌──────────────────────────────────┐  │
+│  │  backend (Python/Flask)          │  │
+│  │  API + AI + Strategy Runtime     │  │
+│  │  → :5000                         │  │
+│  └──────────────┬───────────────────┘  │
+│                 │                       │
+│  ┌──────────────▼───────────────────┐  │
+│  │  postgres (PostgreSQL 16)        │  │
+│  │  Users, Orders, Strategies, ...  │  │
+│  │  → :5432                         │  │
+│  └──────────────────────────────────┘  │
+│                                        │
+│  External connections:                 │
+│  ├─ LLM APIs (OpenRouter/OpenAI/...)   │
+│  ├─ Exchange APIs (Binance/OKX/...)    │
+│  ├─ TronGrid API (USDT payment)       │
+│  └─ Data providers (Yahoo/Finnhub/...) │
+└────────────────────────────────────────┘
 ```
 
 ### Repository Layout
 
 ```text
-.
-├─ backend_api_python/         # Flask API + AI + backtest + strategy + billing
-│  ├─ app/
-│  │  ├─ routes/               # API endpoints (user, billing, indicator, etc.)
-│  │  └─ services/             # Business logic (trading, payment, community)
-│  ├─ migrations/init.sql      # Database schema
-│  ├─ env.example              # Copy to .env for configuration
-│  └─ run.py                   # Entrypoint
-├─ quantdinger_vue/            # Vue 2 UI (Ant Design Vue)
-└─ QuantDinger-Mobile/         # Vue 3 + Capacitor mobile app (optional)
+QuantDinger/
+├── backend_api_python/          # 🐍 Backend API (Open Source)
+│   ├── app/
+│   │   ├── routes/              #   API endpoints (user, billing, strategy, ...)
+│   │   ├── services/            #   Business logic (trading, payment, AI, ...)
+│   │   ├── data_sources/        #   Market data providers
+│   │   └── utils/               #   Helpers (DB, auth, etc.)
+│   ├── migrations/init.sql      #   Database schema
+│   ├── env.example              #   ⚙️ Configuration template — copy to .env
+│   ├── Dockerfile               #   Backend container image
+│   └── run.py                   #   Entrypoint
+│
+├── frontend/                    # 🎨 Frontend (Pre-built)
+│   ├── dist/                    #   Compiled static files (HTML/JS/CSS)
+│   ├── Dockerfile               #   Nginx container image
+│   ├── nginx.conf               #   Nginx config (SPA + API proxy)
+│   └── VERSION                  #   Frontend version tracker
+│
+├── docs/                        # 📚 Documentation & Guides
+│   ├── CHANGELOG.md             #   Version history
+│   ├── screenshots/             #   UI screenshots
+│   └── *.md                     #   Strategy, broker, notification guides
+│
+├── docker-compose.yml           # 🐳 One-click deployment
+├── LICENSE                      # Apache License 2.0
+├── TRADEMARKS.md                # Trademark policy
+├── SECURITY.md                  # Security policy
+├── CONTRIBUTING.md              # Contribution guide
+└── CODE_OF_CONDUCT.md           # Code of conduct
 ```
 
 ---
@@ -511,8 +604,8 @@ Use `backend_api_python/env.example` as a template. Key settings:
 | **OAuth** | `GOOGLE_CLIENT_ID`, `GITHUB_CLIENT_ID`, etc. |
 | **Security** | `TURNSTILE_SITE_KEY`, `ENABLE_REGISTRATION` |
 | **Order Execution** | `ORDER_MODE` (market/maker), `MAKER_WAIT_SEC` |
-| **Membership** 🆕 | `MEMBERSHIP_MONTHLY_PRICE_USD`, `MEMBERSHIP_MONTHLY_CREDITS`, `MEMBERSHIP_YEARLY_PRICE_USD`, etc. |
-| **USDT Payment** 🆕 | `USDT_PAY_ENABLED`, `USDT_TRC20_XPUB`, `TRONGRID_API_KEY`, `USDT_ORDER_EXPIRE_MINUTES` |
+| **Membership** | `MEMBERSHIP_MONTHLY_PRICE_USD`, `MEMBERSHIP_MONTHLY_CREDITS`, `MEMBERSHIP_YEARLY_PRICE_USD`, etc. |
+| **USDT Payment** | `USDT_PAY_ENABLED`, `USDT_TRC20_XPUB`, `TRONGRID_API_KEY`, `USDT_ORDER_EXPIRE_MINUTES` |
 | **Proxy** | `PROXY_PORT` or `PROXY_URL` |
 | **Workers** | `ENABLE_PENDING_ORDER_WORKER`, `ENABLE_PORTFOLIO_MONITOR` |
 
@@ -524,7 +617,7 @@ The backend provides REST endpoints for login, market data, indicators, backtest
 
 - Health: `GET /api/health`
 - Auth: `POST /api/user/login`, `GET /api/user/info`
-- Billing: `GET /api/billing/plans`, `POST /api/billing/usdt/create-order` 🆕
+- Billing: `GET /api/billing/plans`, `POST /api/billing/usdt/create-order`
 
 For the full route list, see `backend_api_python/app/routes/`.
 
@@ -533,6 +626,8 @@ For the full route list, see `backend_api_python/app/routes/`.
 ### License
 
 Licensed under the **Apache License 2.0**. See `LICENSE`.
+
+> **Note**: The frontend UI is provided as pre-built files. The backend source code is fully open under Apache 2.0.
 
 ---
 

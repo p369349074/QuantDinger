@@ -74,6 +74,31 @@ def start_pending_order_worker():
         logger.error(f"Failed to start pending order worker: {e}")
 
 
+def start_usdt_order_worker():
+    """Start the USDT order background worker.
+
+    Periodically scans pending/paid USDT orders and checks on-chain status.
+    Ensures orders are confirmed even if the user closes the browser after payment.
+    Only starts if USDT_PAY_ENABLED=true.
+    """
+    import os
+    if str(os.getenv("USDT_PAY_ENABLED", "False")).lower() not in ("1", "true", "yes"):
+        logger.info("USDT order worker not started (USDT_PAY_ENABLED is not true).")
+        return
+
+    # Avoid running twice with Flask reloader
+    debug = os.getenv("PYTHON_API_DEBUG", "false").lower() == "true"
+    if debug:
+        if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+            return
+
+    try:
+        from app.services.usdt_payment_service import get_usdt_order_worker
+        get_usdt_order_worker().start()
+    except Exception as e:
+        logger.error(f"Failed to start USDT order worker: {e}")
+
+
 def restore_running_strategies():
     """
     Restore running strategies on startup.
@@ -231,6 +256,7 @@ def create_app(config_name='default'):
     with app.app_context():
         start_pending_order_worker()
         start_portfolio_monitor()
+        start_usdt_order_worker()
         restore_running_strategies()
     
     return app

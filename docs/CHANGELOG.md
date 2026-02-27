@@ -42,11 +42,27 @@ This document records version updates, new features, bug fixes, and database mig
 - **Market Order Default**: Changed default order mode to market order for reliable execution
 - **Billing Config i18n**: All billing configuration items fully multi-language supported
 
+#### Quick Trade Panel (闪电交易) 🆕
+- **Side-Sliding Drawer**: Professional trading panel slides in from the right, allowing instant order placement without leaving the analysis page
+- **Multi-Exchange Support**: Select from saved exchange credentials (Binance, OKX, Bitget, Bybit, etc.) with real-time balance display
+- **Long/Short Toggle**: Color-coded direction buttons with one-click switching
+- **Market / Limit Orders**: Toggle between market and limit order types; limit orders accept a specific price
+- **Leverage Slider**: Interactive 1x–125x leverage control for futures trading
+- **TP/SL Price Setting**: Optional take-profit and stop-loss by **absolute price** (not percentage)
+- **Current Position Display**: Shows open position with side, size, entry price, unrealized PnL, and one-click close button
+- **Recent Trade History**: Displays last 5 quick trades with status tags
+- **AI Radar Integration**: "Trade Now" button on each AI Trading Opportunities card pre-fills symbol, direction, and price
+- **Indicator Analysis Integration**: Quick Trade button in chart header and floating ⚡ button pre-fills current symbol and price
+- **Auto-Polling**: Balance and position data refresh every 10 seconds
+- **Full Dark Theme**: Complete dark mode support for all panel elements
+- **Multi-Language**: All labels and messages fully internationalized (zh-CN / en-US)
+
 #### Indicator Market Performance Tracking
 - **Live Performance Data**: Fixed aggregation to correctly parse backtest `result_json` and include live trade data
 - **Combined Metrics**: Backtest return, live PnL, and win rate now properly displayed on indicator cards
 
 ### 🐛 Bug Fixes
+- Fixed `quick_trade.py` importing from non-existent `auth_utils` module (corrected to `auth`)
 - Fixed "Live Performance" data showing all zeros in Indicator Market (incorrect SQL query referencing non-existent columns)
 - Fixed incorrect entry price display in Position Records (was falling back to current price)
 - Fixed inaccurate System Overview statistics for running strategies, total capital, and total PnL
@@ -147,6 +163,34 @@ CREATE TABLE IF NOT EXISTS qd_usdt_orders (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_usdt_orders_address_unique ON qd_usdt_orders(chain, address);
 CREATE INDEX IF NOT EXISTS idx_usdt_orders_user_id ON qd_usdt_orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_usdt_orders_status ON qd_usdt_orders(status);
+
+-- 5. Quick Trades table (manual / discretionary orders from Quick Trade Panel)
+CREATE TABLE IF NOT EXISTS qd_quick_trades (
+    id              SERIAL PRIMARY KEY,
+    user_id         INTEGER NOT NULL REFERENCES qd_users(id) ON DELETE CASCADE,
+    credential_id   INTEGER DEFAULT 0,
+    exchange_id     VARCHAR(40) NOT NULL DEFAULT '',
+    symbol          VARCHAR(60) NOT NULL DEFAULT '',
+    side            VARCHAR(10) NOT NULL DEFAULT '',       -- buy / sell
+    order_type      VARCHAR(20) NOT NULL DEFAULT 'market', -- market / limit
+    amount          DECIMAL(24, 8) DEFAULT 0,
+    price           DECIMAL(24, 8) DEFAULT 0,
+    leverage        INTEGER DEFAULT 1,
+    market_type     VARCHAR(20) DEFAULT 'swap',            -- swap / spot
+    tp_price        DECIMAL(24, 8) DEFAULT 0,
+    sl_price        DECIMAL(24, 8) DEFAULT 0,
+    status          VARCHAR(20) DEFAULT 'submitted',       -- submitted / filled / failed / cancelled
+    exchange_order_id VARCHAR(120) DEFAULT '',
+    filled_amount   DECIMAL(24, 8) DEFAULT 0,
+    avg_fill_price  DECIMAL(24, 8) DEFAULT 0,
+    error_msg       TEXT DEFAULT '',
+    source          VARCHAR(40) DEFAULT 'manual',          -- ai_radar / ai_analysis / indicator / manual
+    raw_result      JSONB,
+    created_at      TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_quick_trades_user    ON qd_quick_trades(user_id);
+CREATE INDEX IF NOT EXISTS idx_quick_trades_created ON qd_quick_trades(created_at DESC);
 
 -- Migration Complete
 DO $$

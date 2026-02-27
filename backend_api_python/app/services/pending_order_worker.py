@@ -207,7 +207,8 @@ class PendingOrderWorker:
                 if exec_mode != "live":
                     logger.debug(f"[PositionSync] Strategy {sid} skipped: execution_mode='{exec_mode}' (needs 'live')")
                     continue
-                exchange_config = resolve_exchange_config(sc.get("exchange_config") or {})
+                sync_user_id = int(sc.get("user_id") or 1)
+                exchange_config = resolve_exchange_config(sc.get("exchange_config") or {}, user_id=sync_user_id)
                 safe_cfg = safe_exchange_config_for_log(exchange_config)
                 market_type = (sc.get("market_type") or exchange_config.get("market_type") or "swap")
                 market_type = str(market_type or "swap").strip().lower()
@@ -832,7 +833,8 @@ class PendingOrderWorker:
             return
 
         cfg = load_strategy_configs(strategy_id)
-        exchange_config = resolve_exchange_config(cfg.get("exchange_config") or {})
+        strategy_user_id = int(cfg.get("user_id") or 1)
+        exchange_config = resolve_exchange_config(cfg.get("exchange_config") or {}, user_id=strategy_user_id)
         safe_cfg = safe_exchange_config_for_log(exchange_config)
         exchange_id = str(exchange_config.get("exchange_id") or "").strip().lower()
         market_category = str(cfg.get("market_category") or "Crypto").strip()
