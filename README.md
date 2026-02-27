@@ -38,36 +38,119 @@
     <a href="https://discord.gg/tyx5B6TChr"><img src="https://img.shields.io/badge/Discord-Join%20Server-5865F2?style=for-the-badge&logo=discord" alt="Discord"></a>
     <a href="https://x.com/HenryCryption"><img src="https://img.shields.io/badge/X-Follow%20Us-000000?style=for-the-badge&logo=x" alt="X"></a>
   </p>
+
+  <p align="center">
+    <img src="https://img.shields.io/badge/🇺🇸_English-2563EB?style=flat-square" alt="English" />
+    <img src="https://img.shields.io/badge/🇨🇳_简体中文-2563EB?style=flat-square" alt="Chinese" />
+    <img src="https://img.shields.io/badge/🇹🇼_繁體中文-2563EB?style=flat-square" alt="Traditional Chinese" />
+    <img src="https://img.shields.io/badge/🇯🇵_日本語-2563EB?style=flat-square" alt="Japanese" />
+    <img src="https://img.shields.io/badge/🇰🇷_한국어-2563EB?style=flat-square" alt="Korean" />
+    <img src="https://img.shields.io/badge/🇩🇪_Deutsch-2563EB?style=flat-square" alt="German" />
+    <img src="https://img.shields.io/badge/🇫🇷_Français-2563EB?style=flat-square" alt="French" />
+    <img src="https://img.shields.io/badge/🇹🇭_ไทย-2563EB?style=flat-square" alt="Thai" />
+    <img src="https://img.shields.io/badge/🇻🇳_Tiếng_Việt-2563EB?style=flat-square" alt="Vietnamese" />
+    <img src="https://img.shields.io/badge/🇸🇦_العربية-2563EB?style=flat-square" alt="Arabic" />
+  </p>
 </div>
+
+---
+
+## 📑 Table of Contents
+
+- [🚀 Quick Start (2 Minutes)](#-quick-start-2-minutes)
+- [📖 Introduction](#-introduction)
+- [📸 Visual Tour](#-visual-tour)
+- [✨ Key Features](#-key-features)
+- [🔌 Supported Exchanges & Brokers](#-supported-exchanges--brokers)
+- [🏗️ Architecture & Configuration](#️-architecture--configuration)
+- [📚 Documentation Index](#-documentation-index)
+- [💼 License & Commercial](#-license--commercial)
+- [🤝 Community & Support](#-community--support)
+
+---
+
+## 🚀 Quick Start (2 Minutes)
+
+> **Only need**: [Docker](https://docs.docker.com/get-docker/) installed. Nothing else.
+
+```bash
+# 1. Clone
+git clone https://github.com/brokermr810/QuantDinger.git
+cd QuantDinger
+
+# 2. Configure (edit admin password & AI API key)
+cp backend_api_python/env.example backend_api_python/.env
+
+# 3. Launch!
+docker-compose up -d --build
+```
+
+> **Windows PowerShell**: use `Copy-Item backend_api_python\env.example -Destination backend_api_python\.env`
+
+🎉 **Done!** Open **http://localhost:8888** | Login: `quantdinger` / `123456`
+
+<details>
+<summary><b>📝 Key settings in backend_api_python/.env</b></summary>
+
+```ini
+# Required — Change for production!
+ADMIN_USER=quantdinger
+ADMIN_PASSWORD=your_secure_password
+SECRET_KEY=your_random_secret_key
+
+# Optional — Enable AI features (pick one)
+OPENROUTER_API_KEY=your_key        # Recommended: 100+ models
+OPENAI_API_KEY=your_key            # GPT-4o
+DEEPSEEK_API_KEY=your_key          # Cost-effective
+GOOGLE_GEMINI_API_KEY=your_key     # Gemini
+```
+
+</details>
+
+<details>
+<summary><b>🔧 Common Docker Commands</b></summary>
+
+```bash
+docker-compose ps                  # View service status
+docker-compose logs -f backend     # View backend logs (real-time)
+docker-compose restart backend     # Restart backend only
+docker-compose up -d --build       # Rebuild & restart all
+docker-compose down                # Stop all services
+```
+
+**Update to latest version:**
+```bash
+git pull && docker-compose up -d --build
+```
+
+**Backup & Restore database:**
+```bash
+docker exec quantdinger-db pg_dump -U quantdinger quantdinger > backup.sql
+cat backup.sql | docker exec -i quantdinger-db psql -U quantdinger quantdinger
+```
+
+**Custom port** — create `.env` in project root:
+```ini
+FRONTEND_PORT=3000          # Default: 8888
+BACKEND_PORT=127.0.0.1:5001 # Default: 5000
+```
+
+</details>
 
 ---
 
 ## 📖 Introduction
 
-### What is QuantDinger?
+**QuantDinger** is a **self-hosted, privacy-first AI quantitative trading platform**. Your strategies, API keys, and trading data stay on **your own machine** — not in someone else's cloud.
 
-QuantDinger is a **local-first, privacy-first, self-hosted quantitative trading infrastructure**. It runs on your own machine/server, providing **multi-user accounts backed by PostgreSQL** while keeping full control of your strategies, trading data, and API keys.
-
-### Why Local-First?
-
-Unlike SaaS platforms that lock your data and strategies in the cloud, QuantDinger runs locally. Your strategies, trading logs, API keys, and analysis results stay on your machine. No vendor lock-in, no data exfiltration.
-
-### Who is this for?
-
-QuantDinger is built for traders, researchers, and engineers who:
-- Value data sovereignty and privacy
-- Want transparent, auditable trading infrastructure
-- Prefer engineering over marketing
-- Need a complete workflow: data, analysis, backtesting, and execution
-
-### Core Value
-
-- **🔓 Apache 2.0 Open Source (Backend)**: Permissive and commercial-friendly
-- **🐍 Python-Native & Visual**: Write indicators in Python with AI assistance, visualize on built-in K-line charts
-- **🤖 AI-Loop Optimization**: AI analyzes backtest results to suggest parameter tuning, forming a closed optimization loop
-- **🌍 Universal Market Access**: Crypto (Live), US Stocks (IBKR), Forex (MT5), Futures (Data/Notify)
-- **💳 Built-in Monetization**: Membership subscription, credit system, USDT on-chain payment
-- **⚡ Docker One-Click Deploy**: `docker-compose up -d` — zero dependency, zero build, production-ready in 2 minutes
+| | |
+|---|---|
+| 🔒 **Privacy-First** | Your API keys, strategies, and data never leave your server |
+| 🐍 **Python-Native** | Write indicators in Python, visualize on K-line charts with AI assistance |
+| 🤖 **AI Co-Pilot** | Multi-agent analysis, backtest optimization, trading radar |
+| 🌍 **Multi-Market** | Crypto (10+ exchanges), US Stocks (IBKR), Forex (MT5) |
+| 💳 **Monetization-Ready** | Membership, credits, USDT on-chain payment — all built-in |
+| ⚡ **One-Click Deploy** | `docker-compose up -d` — production-ready in 2 minutes |
 
 ---
 
@@ -77,67 +160,8 @@ QuantDinger is built for traders, researchers, and engineers who:
   <a href="https://youtu.be/HPTVpqL7knM">
     <img src="docs/screenshots/video_demo.png" alt="QuantDinger Project Introduction Video" width="100%" style="border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 800px;">
   </a>
-  <p><strong>Click the video above to watch the QuantDinger project introduction</strong></p>
+  <p><strong>▶️ Click to watch the full project introduction</strong></p>
 </div>
-
----
-
-## 📚 Documentation Index
-
-All detailed guides and tutorials are in the [`docs/`](docs/) folder. Click any link below to jump directly.
-
-### 📋 General
-
-| Document | Description |
-|----------|-------------|
-| [Changelog](docs/CHANGELOG.md) | Version history, new features, bug fixes, and migration notes |
-| [Multi-User Setup](docs/multi-user-setup.md) | PostgreSQL-based multi-user deployment guide |
-
-### 🐍 Strategy Development
-
-| Document | Language |
-|----------|----------|
-| [Strategy Development Guide](docs/STRATEGY_DEV_GUIDE.md) | 🇺🇸 English |
-| [策略开发指南](docs/STRATEGY_DEV_GUIDE_CN.md) | 🇨🇳 简体中文 |
-| [策略開發指南](docs/STRATEGY_DEV_GUIDE_TW.md) | 🇹🇼 繁體中文 |
-| [ストラテジー開発ガイド](docs/STRATEGY_DEV_GUIDE_JA.md) | 🇯🇵 日本語 |
-| [전략 개발 가이드](docs/STRATEGY_DEV_GUIDE_KO.md) | 🇰🇷 한국어 |
-
-### 📈 Cross-Sectional Strategy
-
-| Document | Language |
-|----------|----------|
-| [Cross-Sectional Strategy Guide](docs/CROSS_SECTIONAL_STRATEGY_GUIDE_EN.md) | 🇺🇸 English |
-| [截面策略开发指南](docs/CROSS_SECTIONAL_STRATEGY_GUIDE_CN.md) | 🇨🇳 简体中文 |
-
-### 🏦 Broker Integration
-
-| Document | Description |
-|----------|-------------|
-| [IBKR Trading Guide](docs/IBKR_TRADING_GUIDE_EN.md) | Interactive Brokers (US Stocks) integration |
-| [MT5 Trading Guide (EN)](docs/MT5_TRADING_GUIDE_EN.md) | MetaTrader 5 (Forex) integration — English |
-| [MT5 交易指南 (CN)](docs/MT5_TRADING_GUIDE_CN.md) | MetaTrader 5 (Forex) 集成指南 — 中文 |
-
-### 🔐 OAuth Configuration
-
-| Document | Language |
-|----------|----------|
-| [OAuth Configuration (EN)](docs/OAUTH_CONFIG_EN.md) | 🇺🇸 Google & GitHub OAuth setup |
-| [OAuth 配置指南 (CN)](docs/OAUTH_CONFIG_CN.md) | 🇨🇳 Google & GitHub OAuth 配置 |
-
-### 🔔 Notification Configuration
-
-| Channel | English | 中文 |
-|---------|---------|------|
-| **Telegram** | [Setup Guide](docs/NOTIFICATION_TELEGRAM_CONFIG_EN.md) | [配置指南](docs/NOTIFICATION_TELEGRAM_CONFIG_CH.md) |
-| **Email (SMTP)** | [Setup Guide](docs/NOTIFICATION_EMAIL_CONFIG_EN.md) | [配置指南](docs/NOTIFICATION_EMAIL_CONFIG_CH.md) |
-| **SMS (Twilio)** | [Setup Guide](docs/NOTIFICATION_SMS_CONFIG_EN.md) | [配置指南](docs/NOTIFICATION_SMS_CONFIG_CH.md) |
-
-### 💻 Code Examples
-
-| File | Description |
-|------|-------------|
-| [docs/examples/](docs/examples/) | Python strategy code examples and templates |
 
 ---
 
@@ -145,7 +169,6 @@ All detailed guides and tutorials are in the [`docs/`](docs/) folder. Click any 
 
 <div align="center">
   <h3>🗺️ System Architecture Overview</h3>
-  <p>A comprehensive view of QuantDinger's AI-powered research, backtesting, and automated trading capabilities.</p>
   <img src="docs/screenshots/tuopu.png" alt="QuantDinger System Topology" width="100%" style="border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 800px;">
 </div>
 
@@ -153,7 +176,6 @@ All detailed guides and tutorials are in the [`docs/`](docs/) folder. Click any 
 
 <div align="center">
   <h3>📊 Professional Quant Dashboard</h3>
-  <p>Real-time monitoring of market dynamics, assets, and strategy status.</p>
   <img src="docs/screenshots/dashboard.png" alt="QuantDinger Dashboard" width="100%" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
 </div>
 
@@ -163,31 +185,31 @@ All detailed guides and tutorials are in the [`docs/`](docs/) folder. Click any 
   <tr>
     <td width="50%" align="center" valign="top">
       <h3>🤖 AI Deep Research</h3>
-      <p>Multi-agent collaboration for market sentiment & technical analysis.</p>
+      <p>Multi-agent market sentiment & technical analysis</p>
       <img src="docs/screenshots/ai_analysis1.png" alt="AI Market Analysis" style="border-radius: 6px;">
     </td>
     <td width="50%" align="center" valign="top">
       <h3>💬 Smart Trading Assistant</h3>
-      <p>Natural language interface for instant market insights.</p>
+      <p>Natural language interface for market insights</p>
       <img src="docs/screenshots/trading_assistant.png" alt="Trading Assistant" style="border-radius: 6px;">
     </td>
   </tr>
   <tr>
     <td width="50%" align="center" valign="top">
-      <h3>📈 Interactive Indicator Analysis</h3>
-      <p>Rich library of technical indicators with drag-and-drop analysis.</p>
+      <h3>📈 Indicator Analysis</h3>
+      <p>Technical indicators with drag-and-drop</p>
       <img src="docs/screenshots/indicator_analysis.png" alt="Indicator Analysis" style="border-radius: 6px;">
     </td>
     <td width="50%" align="center" valign="top">
-      <h3>🐍 Python Strategy Gen</h3>
-      <p>Built-in editor with AI-assisted strategy coding.</p>
+      <h3>🐍 AI Strategy Coding</h3>
+      <p>AI-assisted Python strategy generation</p>
       <img src="docs/screenshots/indicator_creat_python_code.png" alt="Code Generation" style="border-radius: 6px;">
     </td>
   </tr>
   <tr>
     <td colspan="2" align="center" valign="top">
       <h3>📊 Portfolio Monitor</h3>
-      <p>Track positions, set alerts, and receive AI-powered analysis via Email/Telegram.</p>
+      <p>Track positions, set alerts, AI-powered analysis via Email/Telegram</p>
       <img src="docs/screenshots/portfolio.jpg" alt="Portfolio Monitor" style="border-radius: 6px; max-width: 90%;">
     </td>
   </tr>
@@ -197,188 +219,99 @@ All detailed guides and tutorials are in the [`docs/`](docs/) folder. Click any 
 
 ## ✨ Key Features
 
-### 1. Visual Python Strategy Workbench
-*Better than PineScript, Smarter than SaaS.*
+### 🐍 Visual Python Strategy Workbench
 
-- **Python Native**: Write indicators and strategies in Python. Leverage the entire Python ecosystem (Pandas, Numpy, TA-Lib) instead of proprietary languages like PineScript.
-- **"Mini-TradingView" Experience**: Run your Python indicators directly on the built-in K-line charts. Visually debug buy/sell signals on historical data.
-- **AI-Assisted Coding**: Let the built-in AI write the complex logic for you. From idea to code in seconds.
+Write indicators in **Python** (not PineScript), run them on built-in K-line charts, and let AI write the complex logic for you. Full Python ecosystem: Pandas, Numpy, TA-Lib.
 
-### 2. Complete Trading Lifecycle
-*From Indicator to Execution, Seamlessly.*
+### 📈 Complete Trading Lifecycle
 
-1.  **Indicator**: Define your market entry/exit signals.
-2.  **Strategy Config**: Simplified creation with smart defaults (15min K-line, 5x leverage, market order). Advanced mode available for full customization.
-3.  **Backtest & AI Optimization**: Run backtests, view rich performance metrics, and **let AI analyze the result to suggest improvements**.
-4.  **Execution Mode**:
-    - **Live Trading**: 
-      - **Cryptocurrency**: Direct API execution for 10+ exchanges (Binance, OKX, Bitget, Bybit, etc.)
-      - **US Stocks**: Via Interactive Brokers (IBKR)
-      - **Forex**: Via MetaTrader 5 (MT5)
-    - **Signal Notification**: Send signals via Telegram, Discord, Email, SMS, or Webhook.
-5.  **Risk Control**: Mandatory disclaimer acknowledgment before live trading. Market order mode by default for reliable execution.
+**Indicator → Strategy → Backtest → AI Optimize → Live Trade / Signal Notify**
 
-### 3. AI-Powered Analysis & Trading Radar
-*Fast, Accurate, Multi-Market Intelligence.*
+- Simplified strategy creation with smart defaults (15min K-line, 5x leverage, market order)
+- AI analyzes backtest results and suggests parameter improvements
+- Live trading on Crypto (10+ exchanges), US Stocks (IBKR), Forex (MT5)
+- Signal notifications via Telegram, Discord, Email, SMS, Webhook
 
-- **Fast Analysis Mode**: Single LLM call architecture for quick, accurate analysis
-- **AI Trading Opportunities Radar**: Auto-scans Crypto, US Stocks, and Forex markets every hour, displaying opportunities in a rolling carousel
-- **Quick Trade Panel (⚡闪电交易)**: Side-sliding trade panel — see an AI signal or indicator opportunity, click "Trade Now" to instantly place an order without leaving the page. Supports market/limit orders, leverage, TP/SL price, and one-click position close.
-- **ATR-Based Trading Levels**: Stop-loss and take-profit recommendations based on technical analysis
-- **Analysis Memory**: Store analysis results for history review and continuous learning
-- **Strategic Integration**: AI analysis can serve as a "Market Filter" for your strategies
+### 🤖 AI-Powered Analysis
 
-### 4. Membership & Billing System
-*Built-in Monetization for Deployment.*
+- **Multi-Agent Analysis**: 5 parallel analysts + bull/bear debate + final trading decision
+- **AI Trading Radar**: Auto-scans Crypto/Stocks/Forex markets hourly
+- **Quick Trade Panel (⚡)**: One-click trade from any analysis signal
+- **Memory-Augmented**: RAG-style local memory — agents learn from past analyses
 
-- **Subscription Plans**: Monthly / Yearly / Lifetime tiers with configurable pricing
-- **Credit System**: Each plan includes credits; lifetime members receive monthly credit bonuses
-- **USDT On-Chain Payment** 💰: TRC20 scan-to-pay with HD Wallet (xpub) address derivation per order, automatic on-chain reconciliation via TronGrid API
-- **Admin Configuration**: All plan prices, credits, and payment settings configurable via System Settings
+### 💳 Built-in Monetization
 
-### 5. Indicator Community & VIP System
-*Share, Discover, and Trade Indicators.*
+- **Membership Plans**: Monthly / Yearly / Lifetime with credits
+- **USDT On-Chain Payment**: TRC20 scan-to-pay, HD Wallet address derivation, auto-reconciliation
+- **Indicator Marketplace**: Publish, buy, and sell Python indicators with credits
 
-- **Publish & Share**: Share your Python indicators with the community
-- **Credit-Based Purchase**: Buy premium indicators from other users with credits
-- **VIP Free Indicators**: Mark indicators as "VIP Free" — VIP members can use them without spending credits
-- **Rating & Reviews**: Rate and review purchased indicators
-- **Live Performance Tracking**: Real-time performance stats aggregated from backtests and live trades
+### 🔐 User Management & Security
 
-### 6. Universal Data Engine
+- Multi-user with PostgreSQL, role-based permissions
+- Google & GitHub OAuth, email verification
+- Cloudflare Turnstile captcha, rate limiting, demo mode
 
-QuantDinger provides a unified data interface across multiple markets:
+### 🧠 Multi-LLM Support
 
-- **Cryptocurrency**: Direct API connections for trading (10+ exchanges) and CCXT integration for market data (100+ sources)
-- **Stocks**: Yahoo Finance, Finnhub, Tiingo (US stocks)
-- **Futures/Forex**: OANDA and major futures data sources
-- **Proxy Support**: Built-in proxy configuration for restricted network environments
+| Provider | Models |
+|----------|--------|
+| **OpenRouter** | 100+ models (recommended) |
+| **OpenAI** | GPT-4o, GPT-4o-mini |
+| **Google Gemini** | Gemini 1.5 Flash/Pro |
+| **DeepSeek** | DeepSeek Chat |
+| **xAI Grok** | Grok Beta |
 
-### 7. Memory-Augmented Agents (Local RAG + Reflection Loop)
-
-QuantDinger's agents don't start from scratch every time. The backend includes a **local memory store** and an optional **reflection/verification loop**:
-
-- **What it is**: RAG-style experience retrieval injected into agent prompts (NOT model fine-tuning).
-- **Where it lives**: PostgreSQL database (shared with main data) or local files under `backend_api_python/data/memory/` (privacy-first).
+<details>
+<summary><b>🔄 Memory-Augmented Agent Architecture (Click to expand)</b></summary>
 
 ```mermaid
 flowchart TB
-    %% ===== 🌐 Entry Layer =====
     subgraph Entry["🌐 API Entry"]
         A["📡 POST /api/analysis/multi"]
         A2["🔄 POST /api/analysis/reflect"]
     end
-
-    %% ===== ⚙️ Service Layer =====
     subgraph Service["⚙️ Service Orchestration"]
         B[AnalysisService]
         C[AgentCoordinator]
         D["📊 Build Context<br/>price · kline · news · indicators"]
     end
-
-    %% ===== 🤖 Multi-Agent Workflow =====
     subgraph Agents["🤖 Multi-Agent Workflow"]
-
         subgraph P1["📈 Phase 1 · Analysis (Parallel)"]
-            E1["🔍 MarketAnalyst<br/><i>Technical</i>"]
-            E2["📑 FundamentalAnalyst<br/><i>Fundamentals</i>"]
-            E3["📰 NewsAnalyst<br/><i>News & Events</i>"]
-            E4["💭 SentimentAnalyst<br/><i>Market Mood</i>"]
-            E5["⚠️ RiskAnalyst<br/><i>Risk Assessment</i>"]
+            E1["🔍 MarketAnalyst"]
+            E2["📑 FundamentalAnalyst"]
+            E3["📰 NewsAnalyst"]
+            E4["💭 SentimentAnalyst"]
+            E5["⚠️ RiskAnalyst"]
         end
-
-        subgraph P2["🎯 Phase 2 · Debate (Parallel)"]
-            F1["🐂 BullResearcher<br/><i>Bullish Case</i>"]
-            F2["🐻 BearResearcher<br/><i>Bearish Case</i>"]
+        subgraph P2["🎯 Phase 2 · Debate"]
+            F1["🐂 BullResearcher"]
+            F2["🐻 BearResearcher"]
         end
-
         subgraph P3["💹 Phase 3 · Decision"]
-            G["🎰 TraderAgent<br/><i>Final Verdict → BUY / SELL / HOLD</i>"]
+            G["🎰 TraderAgent → BUY / SELL / HOLD"]
         end
-
     end
-
-    %% ===== 🧠 Memory Layer =====
     subgraph Memory["🧠 PostgreSQL Memory Store"]
-        M1[("market_analyst")]
-        M2[("fundamental")]
-        M3[("news_analyst")]
-        M4[("sentiment")]
-        M5[("risk_analyst")]
-        M6[("bull_researcher")]
-        M7[("bear_researcher")]
-        M8[("trader_agent")]
+        M1[("agent memories")]
     end
-
-    %% ===== 🔄 Reflection Loop =====
-    subgraph Reflect["🔄 Reflection Loop (Optional)"]
+    subgraph Reflect["🔄 Reflection Loop"]
         R[ReflectionService]
-        RR[("reflection_records.db")]
         W["⏰ ReflectionWorker"]
     end
-
-    %% ===== Main Flow =====
     A --> B --> C --> D
     D --> P1 --> P2 --> P3
-
-    %% ===== Memory Read/Write =====
-    E1 <-.-> M1
-    E2 <-.-> M2
-    E3 <-.-> M3
-    E4 <-.-> M4
-    E5 <-.-> M5
-    F1 <-.-> M6
-    F2 <-.-> M7
-    G <-.-> M8
-
-    %% ===== Reflection Flow =====
-    C --> R --> RR
-    W --> RR
-    W -.->|"verify + learn"| M8
-    A2 -.->|"manual review"| M8
+    Agents <-.-> M1
+    C --> R
+    W -.->|"verify + learn"| M1
 ```
 
-### 8. Multi-LLM Provider Support
-
-| Provider | Features |
-|----------|----------|
-| **OpenRouter** | Multi-model gateway (default), 100+ models |
-| **OpenAI** | GPT-4o, GPT-4o-mini |
-| **Google Gemini** | Gemini 1.5 Flash/Pro |
-| **DeepSeek** | DeepSeek Chat (cost-effective) |
-| **xAI Grok** | Grok Beta |
-
-Simply configure your preferred provider's API key in `.env`. The system auto-detects available providers.
-
-### 9. User Management & Security
-
-- **Multi-User Support**: PostgreSQL-backed user accounts with role-based permissions
-- **OAuth Login**: Google and GitHub OAuth integration
-- **Email Verification**: Registration and password reset via email codes
-- **Security Features**: Cloudflare Turnstile captcha, IP/account rate limiting
-- **Demo Mode**: Read-only mode for public demonstrations
-
-### 10. Strategy Runtime
-
-- **Thread-Based Executor**: Independent thread pool for strategy execution
-- **Auto-Restore**: Resumes running strategies after system restarts
-- **Market Order Default**: Prioritizes execution reliability over price optimization
-- **Order Queue**: Background worker for order execution
-
-### 11. Tech Stack
-
-- **Backend**: Python (Flask) + PostgreSQL + Redis (optional)
-- **Frontend**: Pre-built (Ant Design Vue + KlineCharts/ECharts)
-- **Payment**: USDT TRC20 on-chain (HD Wallet xpub derivation + TronGrid API)
-- **Mobile**: Vue 3 + Capacitor (Android / iOS) — see `QuantDinger-Mobile/`
-- **Deployment**: Docker Compose (one-click, zero build)
-- **Current Version**: V2.2.1 ([Changelog](docs/CHANGELOG.md))
+</details>
 
 ---
 
 ## 🔌 Supported Exchanges & Brokers
 
-### Cryptocurrency Exchanges (Direct API)
+### Cryptocurrency (Direct API Trading)
 
 | Exchange | Markets |
 |:--------:|:---------|
@@ -386,292 +319,186 @@ Simply configure your preferred provider's API key in `.env`. The system auto-de
 | OKX | Spot, Perpetual, Options |
 | Bitget | Spot, Futures, Copy Trading |
 | Bybit | Spot, Linear Futures |
-| Coinbase Exchange | Spot |
+| Coinbase | Spot |
 | Kraken | Spot, Futures |
 | KuCoin | Spot, Futures |
 | Gate.io | Spot, Futures |
 | Bitfinex | Spot, Derivatives |
 
-### Traditional Brokers
+### Traditional Brokers & Markets
 
-| Broker | Markets | Platform |
-|:------:|:--------|:---------|
-| **Interactive Brokers (IBKR)** | US Stocks | TWS / IB Gateway |
-| **MetaTrader 5 (MT5)** | Forex | MT5 Terminal |
-
-### Supported Markets
-
-| Market Type | Data Sources | Trading |
-|-------------|--------------|---------|
-| **Cryptocurrency** | Binance, OKX, Bitget, + 100 exchanges | ✅ Full support |
-| **US Stocks** | Yahoo Finance, Finnhub, Tiingo | ✅ Via IBKR |
-| **Forex** | Finnhub, OANDA | ✅ Via MT5 |
-| **Futures** | Exchange APIs | ⚡ Data only |
+| Market | Broker/Source | Trading |
+|--------|--------------|---------|
+| **US Stocks** | Interactive Brokers (IBKR), Yahoo Finance, Finnhub | ✅ Via IBKR |
+| **Forex** | MetaTrader 5 (MT5), OANDA | ✅ Via MT5 |
+| **Futures** | Exchange APIs | ⚡ Data + Notify |
 
 ---
 
-### Multi-Language Support
-
-<p>
-  <img src="https://img.shields.io/badge/🇺🇸_English-Supported-2563EB?style=flat-square" alt="English" />
-  <img src="https://img.shields.io/badge/🇨🇳_简体中文-Supported-2563EB?style=flat-square" alt="Simplified Chinese" />
-  <img src="https://img.shields.io/badge/🇹🇼_繁體中文-Supported-2563EB?style=flat-square" alt="Traditional Chinese" />
-  <img src="https://img.shields.io/badge/🇯🇵_日本語-Supported-2563EB?style=flat-square" alt="Japanese" />
-  <img src="https://img.shields.io/badge/🇰🇷_한국어-Supported-2563EB?style=flat-square" alt="Korean" />
-  <img src="https://img.shields.io/badge/🇩🇪_Deutsch-Supported-2563EB?style=flat-square" alt="German" />
-  <img src="https://img.shields.io/badge/🇫🇷_Français-Supported-2563EB?style=flat-square" alt="French" />
-  <img src="https://img.shields.io/badge/🇹🇭_ไทย-Supported-2563EB?style=flat-square" alt="Thai" />
-  <img src="https://img.shields.io/badge/🇻🇳_Tiếng_Việt-Supported-2563EB?style=flat-square" alt="Vietnamese" />
-  <img src="https://img.shields.io/badge/🇸🇦_العربية-Supported-2563EB?style=flat-square" alt="Arabic" />
-</p>
-
-All UI elements, error messages, and documentation are fully translated. Language is auto-detected based on browser settings or can be manually switched in the app.
-
----
-
-## 🚀 Quick Start (Docker One-Click Deploy)
-
-> **Prerequisites**: Docker & Docker Compose installed.  
-> No Node.js, no Python environment needed — everything runs in containers.
-
-### 1. Clone & Configure
-
-```bash
-git clone https://github.com/brokermr810/QuantDinger.git
-cd QuantDinger
-```
-
-### 2. Set Up Environment
-
-```bash
-# Copy the environment template
-cp backend_api_python/env.example backend_api_python/.env
-```
-
-> **Windows PowerShell**:
-> ```powershell
-> Copy-Item backend_api_python\env.example -Destination backend_api_python\.env
-> ```
-
-Edit `backend_api_python/.env` with your settings:
-
-```ini
-# Required — Change these for production!
-ADMIN_USER=quantdinger
-ADMIN_PASSWORD=your_secure_password
-SECRET_KEY=your_random_secret_key
-
-# Optional — Enable AI features
-OPENROUTER_API_KEY=your_openrouter_key
-# or
-OPENAI_API_KEY=your_openai_key
-```
-
-### 3. Launch
-
-```bash
-docker-compose up -d --build
-```
-
-**That's it!** 🎉 Wait about 30 seconds for all services to start.
-
-| Service | URL |
-|---------|-----|
-| **Frontend UI** | http://localhost:8888 |
-| Backend API | http://localhost:5000 (internal) |
-| PostgreSQL | localhost:5432 (internal) |
-
-Default login: `quantdinger` / `123456` (change in `.env` for production).
-
-### Common Docker Commands
-
-```bash
-docker-compose ps                  # View service status
-docker-compose logs -f backend     # View backend logs (real-time)
-docker-compose logs -f frontend    # View frontend/nginx logs
-docker-compose restart backend     # Restart backend only
-docker-compose up -d --build       # Rebuild & restart all
-docker-compose down                # Stop all services
-```
-
-### Update to Latest Version
-
-```bash
-git pull
-docker-compose up -d --build
-```
-
-### Backup & Restore
-
-```bash
-# Backup database
-docker exec quantdinger-db pg_dump -U quantdinger quantdinger > backup_$(date +%Y%m%d).sql
-
-# Restore database
-cat backup.sql | docker exec -i quantdinger-db psql -U quantdinger quantdinger
-```
-
-### Custom Port
-
-Create a `.env` file in the project root to override docker-compose defaults:
-
-```ini
-FRONTEND_PORT=3000          # Change frontend port (default: 8888)
-BACKEND_PORT=127.0.0.1:5001 # Change backend port (default: 5000)
-DB_PORT=127.0.0.1:5433      # Change database port (default: 5432)
-```
-
----
-
-## 🏗️ Architecture
+## 🏗️ Architecture & Configuration
 
 ```text
-┌────────────────────────────────────────┐
-│           Docker Compose               │
-│                                        │
-│  ┌──────────────────────────────────┐  │
-│  │  frontend (Nginx)                │  │
-│  │  Pre-built static files          │  │
-│  │  → :8888                         │  │
-│  └──────────────┬───────────────────┘  │
-│                 │ /api/* proxy          │
-│                 ▼                       │
-│  ┌──────────────────────────────────┐  │
-│  │  backend (Python/Flask)          │  │
-│  │  API + AI + Strategy Runtime     │  │
-│  │  → :5000                         │  │
-│  └──────────────┬───────────────────┘  │
-│                 │                       │
-│  ┌──────────────▼───────────────────┐  │
-│  │  postgres (PostgreSQL 16)        │  │
-│  │  Users, Orders, Strategies, ...  │  │
-│  │  → :5432                         │  │
-│  └──────────────────────────────────┘  │
-│                                        │
-│  External connections:                 │
-│  ├─ LLM APIs (OpenRouter/OpenAI/...)   │
-│  ├─ Exchange APIs (Binance/OKX/...)    │
-│  ├─ TronGrid API (USDT payment)       │
-│  └─ Data providers (Yahoo/Finnhub/...) │
-└────────────────────────────────────────┘
+┌─────────────────────────────────────┐
+│         Docker Compose              │
+│                                     │
+│  ┌───────────────────────────────┐  │
+│  │  frontend (Nginx)  → :8888   │  │
+│  └──────────────┬────────────────┘  │
+│                 │ /api/* proxy       │
+│  ┌──────────────▼────────────────┐  │
+│  │  backend (Flask)   → :5000   │  │
+│  └──────────────┬────────────────┘  │
+│  ┌──────────────▼────────────────┐  │
+│  │  postgres (PG 16)  → :5432   │  │
+│  └───────────────────────────────┘  │
+│                                     │
+│  External: LLM APIs · Exchanges ·   │
+│  TronGrid · Data providers          │
+└─────────────────────────────────────┘
 ```
 
 ### Repository Layout
 
 ```text
 QuantDinger/
-├── backend_api_python/          # 🐍 Backend API (Open Source)
-│   ├── app/
-│   │   ├── routes/              #   API endpoints (user, billing, strategy, ...)
-│   │   ├── services/            #   Business logic (trading, payment, AI, ...)
-│   │   ├── data_sources/        #   Market data providers
-│   │   └── utils/               #   Helpers (DB, auth, etc.)
+├── backend_api_python/          # 🐍 Backend (Open Source, Apache 2.0)
+│   ├── app/routes/              #   API endpoints
+│   ├── app/services/            #   Business logic (AI, trading, payment)
 │   ├── migrations/init.sql      #   Database schema
-│   ├── env.example              #   ⚙️ Configuration template — copy to .env
-│   ├── Dockerfile               #   Backend container image
-│   └── run.py                   #   Entrypoint
-│
+│   ├── env.example              #   ⚙️ Config template → copy to .env
+│   └── Dockerfile
 ├── frontend/                    # 🎨 Frontend (Pre-built)
-│   ├── dist/                    #   Compiled static files (HTML/JS/CSS)
-│   ├── Dockerfile               #   Nginx container image
-│   ├── nginx.conf               #   Nginx config (SPA + API proxy)
-│   └── VERSION                  #   Frontend version tracker
-│
-├── docs/                        # 📚 Documentation & Guides
-│   ├── CHANGELOG.md             #   Version history
-│   ├── screenshots/             #   UI screenshots
-│   └── *.md                     #   Strategy, broker, notification guides
-│
+│   ├── dist/                    #   Static files (HTML/JS/CSS)
+│   ├── Dockerfile               #   Nginx image
+│   └── nginx.conf               #   SPA routing + API proxy
+├── docs/                        # 📚 Guides & tutorials
 ├── docker-compose.yml           # 🐳 One-click deployment
-├── LICENSE                      # Apache License 2.0
-├── TRADEMARKS.md                # Trademark policy
-├── SECURITY.md                  # Security policy
-├── CONTRIBUTING.md              # Contribution guide
-└── CODE_OF_CONDUCT.md           # Code of conduct
+└── LICENSE                      # Apache 2.0
 ```
 
----
+<details>
+<summary><b>⚙️ Configuration Reference (.env)</b></summary>
 
-### Configuration (.env)
+Use `backend_api_python/env.example` as template:
 
-Use `backend_api_python/env.example` as a template. Key settings:
-
-| Category | Variables |
+| Category | Key Variables |
 |----------|-----------|
 | **Auth** | `SECRET_KEY`, `ADMIN_USER`, `ADMIN_PASSWORD` |
 | **Database** | `DATABASE_URL` (PostgreSQL connection string) |
-| **AI / LLM** | `LLM_PROVIDER`, `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, etc. |
-| **OAuth** | `GOOGLE_CLIENT_ID`, `GITHUB_CLIENT_ID`, etc. |
+| **AI / LLM** | `LLM_PROVIDER`, `OPENROUTER_API_KEY`, `OPENAI_API_KEY` |
+| **OAuth** | `GOOGLE_CLIENT_ID`, `GITHUB_CLIENT_ID` |
 | **Security** | `TURNSTILE_SITE_KEY`, `ENABLE_REGISTRATION` |
-| **Order Execution** | `ORDER_MODE` (market/maker), `MAKER_WAIT_SEC` |
-| **Membership** | `MEMBERSHIP_MONTHLY_PRICE_USD`, `MEMBERSHIP_MONTHLY_CREDITS`, `MEMBERSHIP_YEARLY_PRICE_USD`, etc. |
-| **USDT Payment** | `USDT_PAY_ENABLED`, `USDT_TRC20_XPUB`, `TRONGRID_API_KEY`, `USDT_ORDER_EXPIRE_MINUTES` |
+| **Membership** | `MEMBERSHIP_MONTHLY_PRICE_USD`, `MEMBERSHIP_MONTHLY_CREDITS` |
+| **USDT Payment** | `USDT_PAY_ENABLED`, `USDT_TRC20_XPUB`, `TRONGRID_API_KEY` |
 | **Proxy** | `PROXY_PORT` or `PROXY_URL` |
 | **Workers** | `ENABLE_PENDING_ORDER_WORKER`, `ENABLE_PORTFOLIO_MONITOR` |
 
----
+</details>
 
-### API
+<details>
+<summary><b>🔌 API Endpoints</b></summary>
 
-The backend provides REST endpoints for login, market data, indicators, backtesting, strategies, AI analysis, and billing.
-
-- Health: `GET /api/health`
-- Auth: `POST /api/user/login`, `GET /api/user/info`
-- Billing: `GET /api/billing/plans`, `POST /api/billing/usdt/create-order`
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/health` | Health check |
+| `POST /api/user/login` | User authentication |
+| `GET /api/user/info` | Current user info |
+| `GET /api/billing/plans` | Membership plans |
+| `POST /api/billing/usdt/create-order` | Create USDT payment order |
 
 For the full route list, see `backend_api_python/app/routes/`.
 
+</details>
+
 ---
 
-### License
+## 📚 Documentation Index
 
-Licensed under the **Apache License 2.0**. See `LICENSE`.
+All detailed guides are in the [`docs/`](docs/) folder:
 
-> **Note**: The frontend UI is provided as pre-built files. The backend source code is fully open under Apache 2.0.
+### Getting Started
+
+| Document | Description |
+|----------|-------------|
+| [Changelog](docs/CHANGELOG.md) | Version history & migration notes |
+| [Multi-User Setup](docs/multi-user-setup.md) | PostgreSQL multi-user deployment |
+
+### Strategy Development
+
+| Guide | 🇺🇸 EN | 🇨🇳 CN | 🇹🇼 TW | 🇯🇵 JA | 🇰🇷 KO |
+|-------|--------|--------|--------|--------|--------|
+| **Strategy Dev** | [EN](docs/STRATEGY_DEV_GUIDE.md) | [CN](docs/STRATEGY_DEV_GUIDE_CN.md) | [TW](docs/STRATEGY_DEV_GUIDE_TW.md) | [JA](docs/STRATEGY_DEV_GUIDE_JA.md) | [KO](docs/STRATEGY_DEV_GUIDE_KO.md) |
+| **Cross-Sectional** | [EN](docs/CROSS_SECTIONAL_STRATEGY_GUIDE_EN.md) | [CN](docs/CROSS_SECTIONAL_STRATEGY_GUIDE_CN.md) | | | |
+| **Code Examples** | [examples/](docs/examples/) | | | | |
+
+### Broker & Integration
+
+| Guide | English | 中文 |
+|-------|---------|------|
+| **IBKR (US Stocks)** | [Guide](docs/IBKR_TRADING_GUIDE_EN.md) | — |
+| **MT5 (Forex)** | [Guide](docs/MT5_TRADING_GUIDE_EN.md) | [指南](docs/MT5_TRADING_GUIDE_CN.md) |
+| **OAuth (Google/GitHub)** | [Guide](docs/OAUTH_CONFIG_EN.md) | [指南](docs/OAUTH_CONFIG_CN.md) |
+
+### Notifications
+
+| Channel | English | 中文 |
+|---------|---------|------|
+| **Telegram** | [Setup](docs/NOTIFICATION_TELEGRAM_CONFIG_EN.md) | [配置](docs/NOTIFICATION_TELEGRAM_CONFIG_CH.md) |
+| **Email (SMTP)** | [Setup](docs/NOTIFICATION_EMAIL_CONFIG_EN.md) | [配置](docs/NOTIFICATION_EMAIL_CONFIG_CH.md) |
+| **SMS (Twilio)** | [Setup](docs/NOTIFICATION_SMS_CONFIG_EN.md) | [配置](docs/NOTIFICATION_SMS_CONFIG_CH.md) |
+
+---
+
+## 💼 License & Commercial
+
+### Open Source License
+
+Backend source code is licensed under **Apache License 2.0**. See `LICENSE`.
+
+The frontend UI is provided as **pre-built files**. Trademark rights (name/logo/branding) are governed separately — see `TRADEMARKS.md`.
+
+### 🎓 Free Source Code for Non-Profit & Education
+
+If you are a **university**, **research institution**, **non-profit**, **community group**, or **educational program**, you can apply for **free authorization and full frontend source code**:
+
+- 🏫 Universities & academic research
+- 🌍 Open-source communities & developer groups
+- 🤝 Non-profit & public welfare organizations
+- 📚 Educational programs & student hackathons
+
+### 💼 Commercial License
+
+For **commercial use**, purchase a license to get:
+
+- **Full frontend source code** + future updates
+- **Branding authorization** — modify name/logo/copyright as agreed
+- **Operations support** — deployment, upgrades, incident response
+- **Consulting** — architecture review, performance tuning
+
+### 📬 Contact
+
+| Channel | Link |
+|---------|------|
+| **Telegram** | [t.me/worldinbroker](https://t.me/worldinbroker) |
+| **Email** | [brokermr810@gmail.com](mailto:brokermr810@gmail.com) |
 
 ---
 
 ## 🤝 Community & Support
 
-- **Contributing**: [Contributing Guide](CONTRIBUTING.md) · [Contributors](CONTRIBUTORS.md)
-- **Telegram**: [QuantDinger Group](https://t.me/quantdinger)
-- **Discord**: [Join Server](https://discord.gg/tyx5B6TChr)
-- **📺 Video Demo**: [Project Introduction](https://youtu.be/HPTVpqL7knM)
-- **YouTube**: [@quantdinger](https://youtube.com/@quantdinger)
-- **Email**: [brokermr810@gmail.com](mailto:brokermr810@gmail.com)
-- **GitHub Issues**: [Report bugs / Request features](https://github.com/brokermr810/QuantDinger/issues)
+<p>
+  <a href="https://t.me/quantdinger"><img src="https://img.shields.io/badge/Telegram-Group-26A5E4?style=for-the-badge&logo=telegram" alt="Telegram"></a>
+  <a href="https://discord.gg/tyx5B6TChr"><img src="https://img.shields.io/badge/Discord-Server-5865F2?style=for-the-badge&logo=discord" alt="Discord"></a>
+  <a href="https://youtube.com/@quantdinger"><img src="https://img.shields.io/badge/YouTube-Channel-FF0000?style=for-the-badge&logo=youtube" alt="YouTube"></a>
+</p>
+
+- [Contributing Guide](CONTRIBUTING.md) · [Contributors](CONTRIBUTORS.md)
+- [Report Bugs / Request Features](https://github.com/brokermr810/QuantDinger/issues)
+- Email: [brokermr810@gmail.com](mailto:brokermr810@gmail.com)
 
 ---
 
-## 💼 Commercial License & Sponsorship
-
-QuantDinger is licensed under **Apache License 2.0** (code). However, **Apache 2.0 does NOT grant trademark rights**. Our branding assets (name/logo) are protected as trademarks and are governed separately from the code license:
-
-- **Copyright/Attribution**: You must keep required copyright and license notices (including any NOTICE/attribution in the repo and in the UI where applicable).
-- **Trademarks (Name/Logo/Branding)**: Without permission, you may not modify QuantDinger branding (name/logo/UI brand), or use it to imply endorsement or misrepresent origin. If you redistribute a modified version, you should remove QuantDinger branding and rebrand unless you have a commercial license.
-
-If you need to keep/modify QuantDinger branding in a redistribution (including UI branding and logo usage), please contact us for a **commercial license**.
-
-See: `TRADEMARKS.md`
-
-### What you get with a Commercial License
-
-- **Commercial authorization** to modify branding/copyright display as agreed
-- **Operations support**: deployment, upgrades, incident support, and maintenance guidance
-- **Consulting services**: architecture review, performance tuning, strategy workflow consulting
-- **Sponsorship options**: become a project sponsor and we can **display your logo/ad** (README/website/in-app placement as agreed)
-
-### Contact
-
-- **Telegram**: `https://t.me/worldinbroker`
-- **Email**: [brokermr810@gmail.com](mailto:brokermr810@gmail.com)
-
----
-
-
-### 💝 Direct Support (Donations)
-
-Your contributions help us maintain and improve QuantDinger.
+### 💝 Support the Project
 
 **Crypto Donations (ERC-20 / BEP-20 / Polygon / Arbitrum)**
 
@@ -688,46 +515,36 @@ Your contributions help us maintain and improve QuantDinger.
 
 ### 🎓 Supporting Partners
 
-We are proud to be supported by academic institutions and organizations advancing quantitative finance education and research.
-
 <div align="center">
 <table>
   <tr>
     <td align="center" width="50%">
       <a href="https://beinvolved.indiana.edu/organization/quantfiniu" target="_blank">
-        <img src="docs/screenshots/qfs_logo.png" alt="Indiana University Quantitative Finance Society" width="280" style="border-radius: 8px;">
+        <img src="docs/screenshots/qfs_logo.png" alt="Indiana University QFS" width="280" style="border-radius: 8px;">
       </a>
       <br/><br/>
       <strong>Quantitative Finance Society (QFS)</strong><br/>
-      <small>Indiana University Bloomington</small><br/>
-      <small>Fostering the next generation of quantitative finance professionals</small>
+      <small>Indiana University Bloomington</small>
     </td>
   </tr>
 </table>
 </div>
 
-> 💡 **Interested in becoming a supporting partner?** We welcome collaborations with universities, research institutions, and organizations. Contact us at [brokermr810@gmail.com](mailto:brokermr810@gmail.com) or via [Telegram](https://t.me/worldinbroker).
+> 💡 **Want to become a partner?** Contact [brokermr810@gmail.com](mailto:brokermr810@gmail.com) or [Telegram](https://t.me/worldinbroker).
 
 ---
 
 ### Acknowledgements
 
-QuantDinger stands on the shoulders of great open-source projects:
+| Project | Link |
+|---------|------|
+| Flask | [flask.palletsprojects.com](https://flask.palletsprojects.com/) |
+| Pandas | [pandas.pydata.org](https://pandas.pydata.org/) |
+| CCXT | [github.com/ccxt/ccxt](https://github.com/ccxt/ccxt) |
+| yfinance | [github.com/ranaroussi/yfinance](https://github.com/ranaroussi/yfinance) |
+| Vue.js | [vuejs.org](https://vuejs.org/) |
+| Ant Design Vue | [antdv.com](https://antdv.com/) |
+| KlineCharts | [github.com/klinecharts/KLineChart](https://github.com/klinecharts/KLineChart) |
+| ECharts | [echarts.apache.org](https://echarts.apache.org/) |
 
-| Project | Description | Link |
-|---------|-------------|------|
-| **Flask** | Lightweight WSGI web framework | [flask.palletsprojects.com](https://flask.palletsprojects.com/) |
-| **flask-cors** | Cross-Origin Resource Sharing extension | [GitHub](https://github.com/corydolphin/flask-cors) |
-| **Pandas** | Data analysis and manipulation library | [pandas.pydata.org](https://pandas.pydata.org/) |
-| **CCXT** | Cryptocurrency exchange trading library | [github.com/ccxt/ccxt](https://github.com/ccxt/ccxt) |
-| **yfinance** | Yahoo Finance market data downloader | [github.com/ranaroussi/yfinance](https://github.com/ranaroussi/yfinance) |
-| **akshare** | China financial data interface | [github.com/akfamily/akshare](https://github.com/akfamily/akshare) |
-| **bip-utils** | HD wallet key derivation (BIP-32/44) | [GitHub](https://github.com/ebellocchia/bip_utils) |
-| **Vue.js** | Progressive JavaScript framework | [vuejs.org](https://vuejs.org/) |
-| **Ant Design Vue** | Enterprise-class UI components | [antdv.com](https://antdv.com/) |
-| **KlineCharts** | Lightweight financial charting library | [github.com/klinecharts/KLineChart](https://github.com/klinecharts/KLineChart) |
-| **Lightweight Charts** | TradingView charting library | [github.com/nicepkg/lightweight-charts](https://github.com/nicepkg/lightweight-charts) |
-| **ECharts** | Apache data visualization library | [echarts.apache.org](https://echarts.apache.org/) |
-| **Capacitor** | Cross-platform native runtime | [capacitorjs.com](https://capacitorjs.com/) |
-
-Thanks to all maintainers and contributors across these ecosystems! ❤️
+Thanks to all maintainers and contributors! ❤️
