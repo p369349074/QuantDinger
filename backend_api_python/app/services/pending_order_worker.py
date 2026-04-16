@@ -2035,9 +2035,25 @@ class PendingOrderWorker:
                 logger.info(f"live record done: pending_id={order_id} strategy_id={strategy_id} symbol={symbol} signal={signal_type}")
                 _profit_str = f", profit={profit:.4f}" if profit is not None else ""
                 _fee_str = f", fee={total_fee:.6f} {fee_ccy}" if total_fee > 0 else ""
+                _reason_parts = []
+                _reason = str(payload.get("reason") or "").strip()
+                if _reason:
+                    _reason_parts.append(f"reason={_reason}")
+                for _key, _label in (
+                    ("stop_loss_price", "sl"),
+                    ("take_profit_price", "tp"),
+                    ("trailing_stop_price", "trail"),
+                ):
+                    try:
+                        _v = float(payload.get(_key) or 0.0)
+                    except Exception:
+                        _v = 0.0
+                    if _v > 0:
+                        _reason_parts.append(f"{_label}={_v:.6f}")
+                _reason_str = f", {', '.join(_reason_parts)}" if _reason_parts else ""
                 append_strategy_log(
                     strategy_id, "trade",
-                    f"Trade executed: {signal_type} {symbol} filled={filled:.6f} @ {avg_price:.6f}{_fee_str}{_profit_str} (exchange={res.exchange_id})",
+                    f"Trade executed: {signal_type} {symbol} filled={filled:.6f} @ {avg_price:.6f}{_fee_str}{_profit_str}{_reason_str} (exchange={res.exchange_id})",
                 )
         except Exception as e:
             logger.warning(f"record_trade/update_position failed: pending_id={order_id}, err={e}")

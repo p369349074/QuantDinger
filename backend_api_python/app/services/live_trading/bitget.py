@@ -526,6 +526,80 @@ class BitgetMixClient(BaseRestClient):
             return (Decimal("0"), size_precision)
         return (qty, size_precision)
 
+    def _normalize_price(self, *, symbol: str, product_type: str, price: float) -> Tuple[Decimal, Optional[int]]:
+        """
+        Normalize Bitget mix limit price using contract metadata (best-effort).
+
+        Bitget commonly exposes:
+        - pricePlace: max decimals
+        - priceEndStep: integer step within that precision
+
+        Example:
+        - pricePlace=2, priceEndStep=1 => price step = 0.01
+        - pricePlace=1, priceEndStep=5 => price step = 0.5
+        """
+        px = self._to_dec(price)
+        if px <= 0:
+            return (Decimal("0"), None)
+
+        contract: Dict[str, Any] = {}
+        try:
+            contract = self.get_contract(symbol=symbol, product_type=product_type) or {}
+        except Exception:
+            contract = {}
+
+        price_precision = None
+        step = Decimal("0")
+
+        pp = contract.get("pricePlace")
+        pes = contract.get("priceEndStep")
+        try:
+            places = int(pp) if pp is not None else None
+        except Exception:
+            places = None
+        try:
+            end_step = self._to_dec(pes if pes is not None else "0")
+        except Exception:
+            end_step = Decimal("0")
+
+        if places is not None and 0 <= places <= 18:
+            price_precision = places
+            base_tick = Decimal("1").scaleb(-places)
+            if end_step > 0:
+                step = base_tick * end_step
+            else:
+                step = base_tick
+
+        if step <= 0:
+            step = self._to_dec(
+                contract.get("priceStep")
+                or contract.get("priceMultiplier")
+                or contract.get("tickSize")
+                or "0"
+            )
+
+        if step > 0:
+            px = self._floor_to_step(px, step)
+            if price_precision is None:
+                try:
+                    step_normalized = step.normalize()
+                    step_str = str(step_normalized)
+                    if "." in step_str:
+                        price_precision = len(step_str.split(".")[1])
+                        if price_precision < 0:
+                            price_precision = 0
+                        if price_precision > 18:
+                            price_precision = 18
+                    else:
+                        price_precision = 0
+                except Exception:
+                    pass
+
+        min_px = self._to_dec(contract.get("minPrice") or "0")
+        if min_px > 0 and px < min_px:
+            return (Decimal("0"), price_precision)
+        return (px, price_precision)
+
     def ping(self) -> bool:
         code, data, _ = self._request("GET", "/api/v2/public/time")
         return code == 200 and isinstance(data, dict)
@@ -716,6 +790,9 @@ class BitgetMixClient(BaseRestClient):
         sz_dec, sz_precision = self._normalize_size(symbol=symbol, product_type=product_type, base_size=req)
         if float(sz_dec or 0) <= 0:
             raise LiveTradingError(f"Invalid size (below step/min): requested={req}")
+        px_dec, px_precision = self._normalize_price(symbol=symbol, product_type=product_type, price=px)
+        if float(px_dec or 0) <= 0:
+            raise LiveTradingError(f"Invalid price (below step/min): requested={px}")
 
         body: Dict[str, Any] = {
             "symbol": sym,
@@ -723,7 +800,7 @@ class BitgetMixClient(BaseRestClient):
             "marginCoin": str(margin_coin or "USDT"),
             "marginMode": self._normalize_margin_mode(margin_mode),
             "orderType": "limit",
-            "price": str(px),
+            "price": self._dec_str(px_dec, strict_precision=px_precision),
             "size": self._dec_str(sz_dec, strict_precision=sz_precision),
         }
         body.update(

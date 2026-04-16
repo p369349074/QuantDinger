@@ -1345,13 +1345,17 @@ class TradingExecutor:
                                 notification_config=notification_config,
                                 trading_config=trading_config,
                                 ai_model_config=ai_model_config,
+                                stop_loss_price=selected.get("stop_loss_price"),
+                                take_profit_price=selected.get("take_profit_price"),
+                                signal_reason=selected.get("reason"),
+                                trailing_stop_price=selected.get("trailing_stop_price"),
                             )
                             if ok:
                                 logger.info(f"Strategy {strategy_id} signal executed: {signal_type} @ {execute_price}")
                                 append_strategy_log(
                                     strategy_id,
                                     "signal",
-                                    f"Signal submitted: {signal_type} @ {float(execute_price or 0):.6f}",
+                                    f"Signal submitted: {signal_type} @ {float(execute_price or 0):.6f}{self._signal_reason_log_suffix(selected)}",
                                 )
                                 # Notify portfolio positions linked to this symbol
                                 try:
@@ -1637,8 +1641,7 @@ class TradingExecutor:
             if trading_config is None:
                 return None
 
-            enabled = trading_config.get('enable_server_side_stop_loss', True)
-            if str(enabled).lower() in ['0', 'false', 'no', 'off']:
+            if not self._is_server_side_exit_enabled(trading_config, 'enable_server_side_stop_loss'):
                 return None
 
             # 获取当前持仓（使用本地数据库记录作为风控依据）
@@ -1731,6 +1734,9 @@ class TradingExecutor:
         """
         try:
             if not trading_config:
+                return None
+
+            if not self._is_server_side_exit_enabled(trading_config, 'enable_server_side_take_profit'):
                 return None
 
             current_positions = self._get_current_positions(strategy_id, symbol)
@@ -1864,6 +1870,20 @@ class TradingExecutor:
             return None
         except Exception:
             return None
+
+    def _is_server_side_exit_enabled(self, trading_config: Optional[Dict[str, Any]], config_key: str) -> bool:
+        """
+        Bot strategies manage exits in their own scripts, so server-side exits default to off for them.
+        Non-bot strategies keep the historical default of on unless explicitly disabled.
+        """
+        tc = trading_config if isinstance(trading_config, dict) else {}
+        bot_type = str(tc.get('bot_type') or '').strip().lower()
+        default_enabled = not bool(bot_type)
+
+        enabled = tc.get(config_key, default_enabled)
+        if isinstance(enabled, str):
+            return enabled.strip().lower() not in ['0', 'false', 'no', 'off']
+        return bool(enabled)
     
     def _klines_to_dataframe(self, klines: List[Dict[str, Any]]) -> pd.DataFrame:
         """将K线数据转换为DataFrame"""
@@ -2370,6 +2390,8 @@ class TradingExecutor:
         margin_mode: str = 'cross',
         stop_loss_price: float = None,
         take_profit_price: float = None,
+        signal_reason: str = "",
+        trailing_stop_price: float = None,
         execution_mode: str = 'signal',
         notification_config: Optional[Dict[str, Any]] = None,
         trading_config: Optional[Dict[str, Any]] = None,
@@ -2533,6 +2555,10 @@ class TradingExecutor:
                 leverage=leverage,
                 execution_mode=execution_mode,
                 notification_config=notification_config,
+                stop_loss_price=stop_loss_price,
+                take_profit_price=take_profit_price,
+                signal_reason=signal_reason,
+                trailing_stop_price=trailing_stop_price,
                 signal_ts=int(signal_ts or 0),
                 order_mode=bot_order_mode,
             )
@@ -2867,6 +2893,8 @@ class TradingExecutor:
         margin_mode: str = 'cross',
         stop_loss_price: float = None,
         take_profit_price: float = None,
+        signal_reason: str = "",
+        trailing_stop_price: float = None,
         # Order execution params (order_mode, maker_wait_sec, maker_offset_bps) are now
         # configured via environment variables: ORDER_MODE, MAKER_WAIT_SEC, MAKER_OFFSET_BPS
         # These parameters are kept for backward compatibility but will be ignored.
@@ -2899,6 +2927,8 @@ class TradingExecutor:
                 "signal_ts": int(signal_ts or 0),
                 "stop_loss_price": float(stop_loss_price or 0.0) if stop_loss_price is not None else 0.0,
                 "take_profit_price": float(take_profit_price or 0.0) if take_profit_price is not None else 0.0,
+                "trailing_stop_price": float(trailing_stop_price or 0.0) if trailing_stop_price is not None else 0.0,
+                "reason": str(signal_reason or "").strip(),
                 "margin_mode": str(margin_mode or "cross"),
                 "maker_retries": int(maker_retries or 0),
                 "close_fallback_to_market": bool(close_fallback_to_market),
@@ -3106,6 +3136,30 @@ class TradingExecutor:
 
     def _place_stop_loss_order(self, *args, **kwargs):
         pass
+
+    @staticmethod
+    def _signal_reason_log_suffix(signal: Optional[Dict[str, Any]]) -> str:
+        info = signal if isinstance(signal, dict) else {}
+        reason = str(info.get("reason") or "").strip()
+        if not reason:
+            return ""
+
+        parts = [f"reason={reason}"]
+        for key, label in (
+            ("stop_loss_price", "sl"),
+            ("take_profit_price", "tp"),
+            ("trailing_stop_price", "trail"),
+        ):
+            value = info.get(key)
+            if value is None:
+                continue
+            try:
+                fv = float(value)
+            except Exception:
+                continue
+            if fv > 0:
+                parts.append(f"{label}={fv:.6f}")
+        return f", {', '.join(parts)}"
 
     def _get_available_capital(
         self,
