@@ -132,6 +132,7 @@ CONFIG_SCHEMA = {
                     {'value': 'deepseek', 'label': 'DeepSeek'},
                     {'value': 'grok', 'label': 'xAI Grok'},
                     {'value': 'custom', 'label': 'Custom API (OpenAI-compatible)'},
+                    {'value': 'minimax', 'label': 'MiniMax'},
                 ],
                 'description': 'Select your preferred LLM provider'
             },
@@ -288,6 +289,33 @@ CONFIG_SCHEMA = {
                 'default': '',
                 'description': 'Model name to use (e.g. gpt-4o, claude-3-opus)',
                 'group': 'custom'
+            },
+            # MiniMax
+            {
+                'key': 'MINIMAX_API_KEY',
+                'label': 'MiniMax API Key',
+                'type': 'password',
+                'required': False,
+                'link': 'https://platform.minimax.io',
+                'link_text': 'settings.link.getApiKey',
+                'description': 'MiniMax API key',
+                'group': 'minimax'
+            },
+            {
+                'key': 'MINIMAX_MODEL',
+                'label': 'MiniMax Model',
+                'type': 'text',
+                'default': 'MiniMax-M2.7',
+                'description': 'Model: MiniMax-M2.7, MiniMax-M2.7-highspeed',
+                'group': 'minimax'
+            },
+            {
+                'key': 'MINIMAX_BASE_URL',
+                'label': 'MiniMax Base URL',
+                'type': 'text',
+                'default': 'https://api.minimax.io/v1',
+                'description': 'MiniMax API endpoint',
+                'group': 'minimax'
             },
             # Common settings
             {
