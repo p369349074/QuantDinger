@@ -705,6 +705,7 @@ For commercial licensing, frontend source access, branding authorization, or dep
 </p>
 
 - [Contributing Guide](CONTRIBUTING.md)
+- [Contributors](CONTRIBUTORS.md)
 - [Report Bugs / Request Features](https://github.com/brokermr810/QuantDinger/issues)
 - Email: [support@quantdinger.com](mailto:support@quantdinger.com)
 
@@ -721,12 +722,6 @@ Crypto donations:
 [![Star History Chart](https://api.star-history.com/svg?repos=brokermr810/QuantDinger&type=Date)](https://star-history.com/#brokermr810/QuantDinger&Date)
 
 ## Acknowledgements
-
-### Community contributors
-
-Thanks to contributors who improve QuantDinger via pull requests:
-
-- [leonideos](https://github.com/leonideos): MOEX (Moscow Exchange) equities data source (analysis/backtest only); see [PR #70](https://github.com/brokermr810/QuantDinger/pull/70).
 
 QuantDinger stands on top of a strong open-source ecosystem. Special thanks to projects such as:
 

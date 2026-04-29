@@ -692,6 +692,7 @@ QuantDinger/
 </p>
 
 - [贡献指南](../CONTRIBUTING.md)
+- [贡献者名单](../CONTRIBUTORS.md)
 - [问题反馈 / 功能建议](https://github.com/brokermr810/QuantDinger/issues)
 - Email: [support@quantdinger.com](mailto:support@quantdinger.com)
 
@@ -706,12 +707,6 @@ QuantDinger/
 [![Star History Chart](https://api.star-history.com/svg?repos=brokermr810/QuantDinger&type=Date)](https://star-history.com/#brokermr810/QuantDinger&Date)
 
 ## 致谢
-
-### 社区贡献者
-
-感谢以下贡献者通过 Pull Request 改进 QuantDinger：
-
-- [leonideos](https://github.com/leonideos)：MOEX（莫斯科交易所）股票数据源（分析/回测），见 [PR #70](https://github.com/brokermr810/QuantDinger/pull/70)。
 
 QuantDinger 建立在优秀的开源生态之上，特别感谢以下项目：
 
