@@ -22,7 +22,7 @@ import numpy as np
 from app.utils.logger import get_logger
 from app.utils.db import get_db_connection
 from app.utils.strategy_runtime_logs import append_strategy_log
-from app.data_sources import DataSourceFactory
+from app.data_sources import DataSourceFactory, UnsupportedMarketError
 from app.services.kline import KlineService
 from app.services.indicator_params import IndicatorParamsParser, IndicatorCaller
 from app.services.strategy_script_runtime import (
@@ -827,7 +827,10 @@ class TradingExecutor:
             except Exception:
                 pass
 
-        def _is_fatal_error_message(msg: str) -> bool:
+        def _is_fatal_error(err: Exception, msg: str) -> bool:
+            # Config errors from data sources should stop immediately.
+            if isinstance(err, UnsupportedMarketError):
+                return True
             m = (msg or "").lower()
             if not m:
                 return False
@@ -1544,9 +1547,16 @@ class TradingExecutor:
                     except Exception:
                         pass
 
-                    fatal = _is_fatal_error_message(msg)
+                    fatal = _is_fatal_error(e, msg)
                     if fatal or consecutive_errors >= max_consecutive_errors:
-                        exit_reason = msg if fatal else f"too many consecutive errors: {consecutive_errors}/{max_consecutive_errors}"
+                        if fatal and isinstance(e, UnsupportedMarketError):
+                            exit_reason = (
+                                f"Unsupported market type: {getattr(e, 'market', '')}. "
+                                f"Please set strategy market_category/market to one of: "
+                                f"Crypto/USStock/CNStock/HKStock/Forex/Futures/MOEX."
+                            )
+                        else:
+                            exit_reason = msg if fatal else f"too many consecutive errors: {consecutive_errors}/{max_consecutive_errors}"
                         logger.error(f"Strategy {strategy_id} auto-stopping due to {'fatal error' if fatal else 'error threshold'}: {exit_reason}")
                         self._console_print(f"[strategy:{strategy_id}] auto-stopping: {exit_reason}")
                         _set_db_stopped_best_effort(exit_reason)
